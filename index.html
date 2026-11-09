@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f7fb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; frame-src 'none'">
+  <title>WARITH 8085</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/8085-192.png">
+  <link rel="stylesheet" href="assets/vendor/tabler.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-mobile-view="program">
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="WARITH 8085">
+        <span class="brand-chip">85</span>
+        <span class="brand-copy"><strong data-i18n="brand">WARITH 8085</strong><small data-i18n="brandSub">Microprocessor learning lab</small></span>
+      </a>
+      <button id="installAppBtn" class="install-app" type="button" hidden>Install app</button>
+    </header>
+
+    <nav class="mobile-tabs" role="tablist" aria-label="Simulator panels">
+      <button type="button" role="tab" data-mobile-view="program" aria-controls="editorPanel" aria-selected="true"><span>⌨</span>Code</button>
+      <button type="button" role="tab" data-mobile-view="flow" aria-controls="flowPanel" aria-selected="false"><span>⇄</span>Flow</button>
+      <button type="button" role="tab" data-mobile-view="state" aria-controls="statePanel" aria-selected="false"><span>A</span>Registers</button>
+      <button type="button" role="tab" data-mobile-view="memory" aria-controls="memoryPanel" aria-selected="false"><span>▦</span>Memory</button>
+    </nav>
+
+    <main class="page">
+      <section class="execution-toolbar panel card" aria-label="Execution controls">
+        <div class="actions">
+          <button id="assembleBtn" class="button btn btn-primary primary"><span class="button-icon">⌘</span><span data-i18n="assemble">Assemble</span><kbd>Ctrl ↵</kbd></button>
+          <button id="stepBtn" class="button btn" disabled><span class="button-icon">▷</span><span data-i18n="step">Step</span><kbd>F6</kbd></button>
+          <button id="runBtn" class="button btn" disabled><span class="button-icon">▶</span><span data-i18n="run">Run</span><kbd>F5</kbd></button>
+          <button id="resetBtn" class="button btn icon-button" disabled aria-label="Reset" title="Reset"><span class="button-icon">↺</span><span class="button-text" data-i18n="reset">Reset</span></button>
+        </div>
+        <label class="speed-control"><span data-i18n="speed">Speed</span><input id="speed" type="range" min="1" max="12" value="1"><b id="speedValue">1</b><span data-i18n="instructionsPerTick">instruction / tick</span></label>
+        <div id="status" class="status" role="status" aria-live="polite" data-i18n="initialStatus">Choose an example or write a program, then assemble it.</div>
+      </section>
+
+      <section class="workspace">
+        <section class="panel card editor-panel" id="editorPanel">
+          <div class="panel-heading">
+            <div class="heading-copy"><span class="section-kicker">01 <i>/</i> <span data-i18n="program">PROGRAM</span></span><h2 data-i18n="editorTitle">Assembly Code Editor</h2><span id="editorExecution" class="editor-execution">Not executing</span></div>
+            <label class="sample-select"><span data-i18n="examples">Examples</span>
+              <select id="sampleSelect" aria-label="Choose a sample">
+                <option value="sum" data-i18n="sampleSum">Add two numbers</option>
+                <option value="loop" data-i18n="sampleLoop">Countdown loop</option>
+                <option value="memory" data-i18n="sampleMemory">Read and write memory</option>
+                <option value="stack" data-i18n="sampleStack">Use the stack</option>
+              </select>
+            </label>
+          </div>
+          <div class="editor-wrap">
+            <div class="editor-gutter" id="lineNumbers" aria-hidden="true">1</div>
+            <textarea id="source" spellcheck="false" aria-label="Assembly editor" dir="ltr"></textarea>
+            <span class="editor-language">8085 ASM</span>
+          </div>
+        </section>
+
+        <section class="panel card flow-panel" id="flowPanel" aria-label="Execution data path">
+          <div class="panel-heading compact">
+            <div class="heading-copy"><span class="section-kicker">01 <i>/</i> <span data-i18n="dataPath">DATA PATH</span></span><h2 data-i18n="flowTitle">Data movement inside the CPU</h2></div>
+            <span class="flow-live"><i></i><span id="flowStep" data-i18n="waitingExecution">Ready to execute</span></span>
+          </div>
+          <div class="flow-map" dir="ltr">
+            <svg class="flow-wires" viewBox="0 0 900 360" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L8 4 L0 8 Z" fill="#758d96"/></marker>
+                <marker id="arrow-active" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L8 4 L0 8 Z" fill="#168a78"/></marker>
+              </defs>
+              <path data-wire="program-cpu" marker-end="url(#arrow)"/>
+              <path data-wire="registers-cpu" marker-end="url(#arrow)"/>
+              <path data-wire="cpu-registers" marker-end="url(#arrow)"/>
+              <path data-wire="cpu-memory" marker-end="url(#arrow)"/>
+              <path data-wire="memory-cpu" marker-end="url(#arrow)"/>
+              <path data-wire="cpu-stack" marker-end="url(#arrow)"/>
+              <path data-wire="stack-cpu" marker-end="url(#arrow)"/>
+              <path data-wire="cpu-ports" marker-end="url(#arrow)"/>
+              <path data-wire="ports-cpu" marker-end="url(#arrow)"/>
+              <circle id="dataPacket" class="data-packet" r="6" cx="0" cy="0"/>
+            </svg>
+            <div class="flow-node program-node" data-flow-node="program"><span class="node-icon">01</span><b data-i18n="programMemory">Program memory</b><small id="programFlowValue">Instructions &amp; data</small></div>
+            <div class="flow-node cpu-node" data-flow-node="cpu"><span class="node-icon">8085</span><b data-i18n="processor">Processor</b><small id="cpuFlowValue">Control unit · ALU</small></div>
+            <div class="flow-node registers-node" data-flow-node="registers"><span class="node-icon">A–L</span><b data-i18n="registers">Registers</b><small id="registerFlowValue">A: 00 · HL: 0000</small></div>
+            <div class="flow-node memory-node" data-flow-node="memory"><span class="node-icon">RAM</span><b data-i18n="dataMemory">Data memory</b><small id="memoryFlowValue">64 KB</small></div>
+            <div class="flow-node stack-node" data-flow-node="stack"><span class="node-icon">SP</span><b data-i18n="stack">Stack</b><small id="stackFlowValue">Grows toward lower addresses</small></div>
+            <div class="flow-node ports-node" data-flow-node="ports"><span class="node-icon">I/O</span><b data-i18n="ioPorts">I/O ports</b><small id="portsFlowValue">256 ports</small></div>
+          </div>
+          <div class="flow-caption">
+            <div class="flow-caption-icon">↗</div>
+            <div><b id="flowDescription" data-i18n="flowDescription">The CPU fetches an instruction and determines its data path.</b><small id="flowAddress" data-i18n="flowPrompt">Press Step to watch each data-bus transfer.</small></div>
+            <code id="flowData">—</code>
+          </div>
+        </section>
+
+        <aside class="side-column">
+          <section class="panel card register-panel" id="statePanel">
+            <div class="panel-heading compact">
+              <div class="heading-copy"><span class="section-kicker">02 <i>/</i> <span data-i18n="state">STATE</span></span><h2 data-i18n="registersTitle">Registers Hub</h2></div>
+              <span id="cpuState" class="state-badge" data-i18n="stopped">Stopped</span>
+            </div>
+            <div class="register-grid">
+              <div class="register-cell"><span>A <small data-i18n="accumulator">Accumulator</small></span><b id="regA">00</b></div>
+              <div class="register-cell" hidden><span>F <small data-i18n="flags">Flags</small></span><b id="regF">02</b></div>
+              <div class="register-cell"><span>B</span><b id="regB">00</b></div>
+              <div class="register-cell"><span>C</span><b id="regC">00</b></div>
+              <div class="register-cell"><span>D</span><b id="regD">00</b></div>
+              <div class="register-cell"><span>E</span><b id="regE">00</b></div>
+              <div class="register-cell"><span>H</span><b id="regH">00</b></div>
+              <div class="register-cell"><span>L</span><b id="regL">00</b></div>
+              <div class="register-cell wide"><span>SP <small data-i18n="stackPointer">Stack pointer</small></span><b id="regSP">FFFF</b></div>
+              <div class="register-cell wide"><span>PC <small data-i18n="programCounter">Program counter</small></span><b id="regPC">0000</b></div>
+            </div>
+            <div class="flags" aria-label="Processor flags">
+              <div class="flag" data-flag="S"><span>S</span><small data-i18n="sign">Sign</small></div>
+              <div class="flag" data-flag="Z"><span>Z</span><small data-i18n="zero">Zero</small></div>
+              <div class="flag" data-flag="AC"><span>AC</span><small data-i18n="auxCarry">Aux carry</small></div>
+              <div class="flag" data-flag="P"><span>P</span><small data-i18n="parity">Parity</small></div>
+              <div class="flag" data-flag="CY"><span>CY</span><small data-i18n="carry">Carry</small></div>
+            </div>
+            <div class="counter"><span data-i18n="instructionsExecuted">Instructions executed</span><b id="instructionCount">0</b></div>
+          </section>
+
+          <section class="panel card memory-panel" id="memoryPanel">
+            <div class="panel-heading compact">
+              <div class="heading-copy"><span class="section-kicker">03 <i>/</i> <span data-i18n="memory">MEMORY</span></span><h2 data-i18n="memoryTitle">Memory Glass Pane</h2></div>
+              <label class="address-input"><span data-i18n="address">Address</span><input id="memoryAddress" value="0000" maxlength="4" dir="ltr" aria-label="Memory address"></label>
+            </div>
+            <div class="memory-meta"><span data-i18n="memoryHint">64 KB · hexadecimal bytes</span><span class="memory-legend"><i></i><span data-i18n="programByte">Program</span><i></i><span data-i18n="currentAddress">Pointer</span></span></div>
+            <div id="memoryView" class="memory-view" dir="ltr"></div>
+          </section>
+        </aside>
+      </section>
+
+      <section class="lower-grid">
+        <section class="panel card listing-panel">
+          <div class="panel-heading compact"><div class="heading-copy"><span class="section-kicker">05 <i>/</i> <span data-i18n="program">PROGRAM</span></span><h2 data-i18n="listingTitle">Console · Instruction listing</h2></div><span id="programSize" class="muted-label" data-i18n="notAssembled">Not assembled</span></div>
+          <div id="listing" class="listing-empty" data-i18n="listingEmpty">Execution output and instruction bytes appear here after assembly.</div>
+        </section>
+        <section class="panel card stack-panel">
+          <div class="panel-heading compact"><div class="heading-copy"><span class="section-kicker">06 <i>/</i> <span data-i18n="stack">STACK</span></span><h2 data-i18n="stackArea">Stack memory</h2></div><span id="stackPointer" class="mono-label">SP: FFFF</span></div>
+          <div id="stackView" class="stack-view"></div>
+        </section>
+      </section>
+
+    </main>
+  </div>
+  <script src="core.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

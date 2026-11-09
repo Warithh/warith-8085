@@ -1,0 +1,28 @@
+{
+  "id": "./",
+  "name": "WARITH 8085 Simulator",
+  "short_name": "WARITH 8085",
+  "description": "An offline-ready Intel 8085 learning simulator.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f7fb",
+  "theme_color": "#f4f7fb",
+  "icons": [
+    {
+      "src": "assets/8085-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/8085-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
