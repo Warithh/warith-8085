@@ -48,8 +48,9 @@
       <section class="workspace">
         <section class="panel card editor-panel" id="editorPanel">
           <div class="panel-heading">
-            <div class="heading-copy"><span class="section-kicker">01 <i>/</i> <span data-i18n="program">PROGRAM</span></span><h2 data-i18n="editorTitle">Assembly Code Editor</h2><span id="editorExecution" class="editor-execution">Not executing</span></div>
-            <label class="sample-select"><span data-i18n="examples">Examples</span>
+            <div class="heading-copy"><span class="section-kicker">01 <i>/</i> <span data-i18n="program">PROGRAM</span></span><h2 id="editorTitle">Assembly Code Editor</h2><span id="editorExecution" class="editor-execution">Not executing</span></div>
+            <label class="sample-select" id="originLabel" hidden><span>Origin</span><input id="machineOrigin" value="0000" maxlength="4" spellcheck="false" aria-label="Origin address"></label>
+            <label class="sample-select" id="sampleLabel"><span data-i18n="examples">Examples</span>
               <select id="sampleSelect" aria-label="Choose a sample">
                 <option value="sum" data-i18n="sampleSum">Add two numbers</option>
                 <option value="loop" data-i18n="sampleLoop">Countdown loop</option>
@@ -58,10 +59,19 @@
               </select>
             </label>
           </div>
-          <div class="editor-wrap">
+          <div class="editor-tabs" role="tablist" aria-label="Program input">
+            <button type="button" id="assemblyTab" role="tab" aria-selected="true" aria-controls="assemblyEditor">Assembly</button>
+            <button type="button" id="machineTab" role="tab" aria-selected="false" aria-controls="machinePane">Machine Language Code</button>
+          </div>
+          <div class="editor-wrap" id="assemblyEditor">
             <div class="editor-gutter" id="lineNumbers" aria-hidden="true">1</div>
             <textarea id="source" spellcheck="false" aria-label="Assembly editor" dir="ltr"></textarea>
             <span class="editor-language">8085 ASM</span>
+          </div>
+          <div class="editor-wrap" id="machinePane" hidden>
+            <div class="editor-gutter" id="machineLineNumbers" aria-hidden="true">1</div>
+            <textarea id="machineSource" spellcheck="false" aria-label="Machine language code" dir="ltr" placeholder="ORG 2000&#10;3E 25&#10;06 17&#10;80&#10;76"></textarea>
+            <span class="editor-language">8085 HEX</span>
           </div>
         </section>
 

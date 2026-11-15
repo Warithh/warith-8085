@@ -124,12 +124,20 @@ h1 em { color: var(--accent); font: 700 .96em var(--mono); font-style: normal; l
 .sample-select { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 9px; white-space: nowrap; }
 .sample-select select { max-width: 160px; border: 1px solid var(--line); border-radius: 7px; padding: 7px 8px; color: var(--ink-soft); background: #fbfdfd; font-size: 9px; outline: none; }
 .sample-select select:focus, .address-input input:focus { border-color: #84b5af; box-shadow: 0 0 0 3px #2b908218; }
+.editor-tabs { display: flex; gap: 6px; margin-top: 10px; }
+.editor-tabs button {
+  min-height: 32px; border: 1px solid #dce5e8; border-radius: 999px; padding: 4px 12px;
+  color: #60717d; background: #fff; font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.editor-tabs button[aria-selected="true"] { border-color: var(--tblr-primary); color: white; background: var(--tblr-primary); }
 .editor-wrap { position: relative; flex: 1 1 auto; min-height: 420px; margin-top: 11px; display: flex; overflow: hidden; border: 1px solid #dce5e9; border-radius: 9px; background: var(--surface-code); direction: ltr; transition: border-color .2s, box-shadow .2s; }
+#assemblyEditor[hidden], #machinePane[hidden], #originLabel[hidden] { display: none !important; }
+#originLabel input { width: 72px; border: 1px solid var(--line); border-radius: 7px; padding: 7px 8px; color: var(--ink); background: #fbfdfd; text-align: center; font: 12px var(--mono); }
 .editor-wrap:focus-within { border-color: #8dbdb7; box-shadow: 0 0 0 3px #24827a12; }
 .editor-gutter { width: 40px; flex: 0 0 40px; overflow: hidden; padding: 13px 8px; border-inline-end: 1px solid #e5ebee; color: #a3afbc; background: #f8fafb; text-align: end; white-space: pre; font: 11px/1.85 var(--mono); user-select: none; }
 .editor-gutter span { display: block; border-radius: 3px; }
 .editor-gutter span.current { color: #087a6c; background: #dff3ea; font-weight: 700; }
-#source { width: 100%; height: 100%; min-width: 0; resize: none; outline: none; border: 0; padding: 13px; color: #304858; background: transparent; font: 11px/1.85 var(--mono); tab-size: 4; direction: ltr; text-align: left; }
+#source, #machineSource { width: 100%; height: 100%; min-width: 0; resize: none; outline: none; border: 0; padding: 13px; color: #304858; background: transparent; font: 11px/1.85 var(--mono); tab-size: 4; direction: ltr; text-align: left; }
 .editor-language { position: absolute; inset-inline-end: 10px; bottom: 8px; padding: 2px 6px; border: 1px solid #e4eaf0; border-radius: 4px; color: #8998a7; background: #ffffffde; font: 8px var(--mono); pointer-events: none; }
 .editor-controls { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 12px; }
 
@@ -284,7 +292,7 @@ body { min-height: 0; }
 .sample-select { font-size: 12px; }
 .sample-select select { max-width: 210px; padding: 9px 11px; font-size: 12px; }
 .editor-wrap { min-height: 0; height: auto; flex: 1 1 0; margin-top: 14px; }
-#source { font-size: 15px; line-height: 1.9; }
+#source, #machineSource { font-size: 15px; line-height: 1.9; }
 .editor-gutter { width: 48px; flex-basis: 48px; font-size: 15px; line-height: 1.9; }
 .editor-language { font-size: 10px; }
 .flow-panel { grid-area: flow; grid-row: 1 / span 2; min-height: 0; padding: 20px; }
@@ -480,6 +488,7 @@ body { min-height: 0; }
     flex: 0 1 70%; padding: 8px 10px; font-size: 11px;
   }
   .editor-wrap { height: 52vh; min-height: 310px; max-height: 560px; flex: none; margin-top: 10px; }
+  .editor-tabs button { min-height: 36px; }
   .editor-gutter { width: 35px; flex-basis: 35px; padding: 11px 6px; font-size: 11px; }
   .sample-select select, .address-input input { font-size: 16px; }
   #source { padding: 11px 9px; font-size: 16px; line-height: 1.8; }

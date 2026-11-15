@@ -224,9 +224,9 @@ LOOP:   DCR B
       row.children[1].textContent = I8085.hex(cpu.memory[address]);
     }
   }
-  function renderListing() {
+  function renderListing(shown = program) {
     const container = $("#listing");
-    if (!program) {
+    if (!shown) {
       if (container.className !== "listing-empty" || renderedListingProgram !== null) {
         container.className = "listing-empty";
         container.textContent = t("listingEmpty");
@@ -236,7 +236,7 @@ LOOP:   DCR B
       $("#programSize").textContent = t("notAssembled");
       return;
     }
-    if (renderedListingProgram !== program) {
+    if (renderedListingProgram !== shown) {
       container.className = "listing-scroll";
       const table = document.createElement("table");
       table.className = "listing-table";
@@ -248,7 +248,7 @@ LOOP:   DCR B
       }
       thead.append(heading);
       const body = document.createElement("tbody");
-      for (const row of program.listing) {
+      for (const row of shown.listing) {
         if (!row.bytes.length) continue;
         const tr = document.createElement("tr");
         tr.dataset.address = String(row.address);
@@ -261,9 +261,9 @@ LOOP:   DCR B
       }
       table.append(thead, body);
       container.replaceChildren(table);
-      renderedListingProgram = program;
+      renderedListingProgram = shown;
       renderedListingStep = null;
-      renderedProgramByteCount = program.occupied.reduce((sum, byte) => sum + byte, 0);
+      renderedProgramByteCount = shown.occupied.reduce((sum, byte) => sum + byte, 0);
       container.dataset.activeAddress = "";
     }
     $("#programSize").textContent = `${renderedProgramByteCount} bytes`;
@@ -501,10 +501,54 @@ LOOP:   DCR B
     $("#runBtn").disabled = !program;
     $("#resetBtn").disabled = !program;
   }
+  let inputMode = "assembly";
+  function setInputMode(mode) {
+    inputMode = mode;
+    const machine = mode === "machine";
+    $("#assemblyEditor").hidden = machine;
+    $("#machinePane").hidden = !machine;
+    $("#sampleLabel").hidden = machine;
+    $("#originLabel").hidden = !machine;
+    $("#assemblyTab").setAttribute("aria-selected", String(!machine));
+    $("#machineTab").setAttribute("aria-selected", String(machine));
+    $("#editorTitle").textContent = machine ? "Machine Language Code" : "Assembly Code Editor";
+    if (machine) renderMachinePreview();
+    else render();
+  }
+  function machineOrigin() {
+    const originText = $("#machineOrigin").value.trim().toUpperCase();
+    if (!/^[0-9A-F]{1,4}$/.test(originText)) throw new Error("Origin must be 1 to 4 hexadecimal digits.");
+    return parseInt(originText, 16);
+  }
+  function updateMachineLines() {
+    const count = Math.max($("#machineSource").value.split("\n").length, 1);
+    $("#machineLineNumbers").textContent = Array.from({ length: count }, (_, index) => index + 1).join("\n");
+  }
+  function renderMachinePreview() {
+    updateMachineLines();
+    try {
+      const decoded = I8085.loadMachine($("#machineSource").value, machineOrigin());
+      if (!decoded.listing.length) {
+        renderListing(null);
+        $("#programSize").textContent = "Not assembled";
+        return;
+      }
+      renderListing(decoded);
+    } catch (error) {
+      const container = $("#listing");
+      container.className = "listing-empty";
+      container.textContent = error.message;
+      renderedListingProgram = null;
+      $("#programSize").textContent = "Not assembled";
+    }
+  }
   function assemble() {
     pause();
     try {
-      program = I8085.assemble(source.value);
+      if (inputMode === "machine") {
+        if (!$("#machineSource").value.trim()) throw new Error("Enter machine codes, then assemble them.");
+        program = I8085.loadMachine($("#machineSource").value, machineOrigin());
+      } else program = I8085.assemble(source.value);
       cpu.load(program);
       lastStep = null;
       clearFlow();
@@ -569,6 +613,14 @@ LOOP:   DCR B
       }
     }, 420);
   }
+  $("#assemblyTab").addEventListener("click", () => setInputMode("assembly"));
+  $("#machineTab").addEventListener("click", () => { setInputMode("machine"); renderMachinePreview(); });
+  $("#machineSource").addEventListener("input", renderMachinePreview);
+  $("#machineSource").addEventListener("scroll", () => { $("#machineLineNumbers").scrollTop = $("#machineSource").scrollTop; });
+  $("#machineOrigin").addEventListener("input", () => {
+    $("#machineOrigin").value = $("#machineOrigin").value.toUpperCase().replace(/[^0-9A-F]/g, "").slice(0, 4);
+    renderMachinePreview();
+  });
   $("#assembleBtn").addEventListener("click", assemble);
   $("#stepBtn").addEventListener("click", () => step());
   $("#runBtn").addEventListener("click", run);

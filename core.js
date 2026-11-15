@@ -562,22 +562,88 @@
 
   function disassemble(memory, address) {
     const op = memory[address & 0xffff], next = memory[(address + 1) & 0xffff], hi = memory[(address + 2) & 0xffff];
-    if (op >= 0x40 && op <= 0x7f) return { text: op === 0x76 ? "HLT" : `MOV ${REGISTERS[(op >> 3) & 7]},${REGISTERS[op & 7]}`, size: 1 };
-    if (op >= 0x80 && op <= 0xbf) return { text: `${ALU_NAMES[(op >> 3) & 7]} ${REGISTERS[op & 7]}`, size: 1 };
-    if ((op & 0xc7) === 0x06) return { text: `MVI ${REGISTERS[(op >> 3) & 7]},${hex(next)}H`, size: 2 };
-    if ((op & 0xcf) === 0x01) return { text: `LXI ${PAIRS[(op >> 4) & 3]},${hex(next | (hi << 8), 4)}H`, size: 3 };
-    if ((op & 0xc7) === 0x04) return { text: `INR ${REGISTERS[(op >> 3) & 7]}`, size: 1 };
-    if ((op & 0xc7) === 0x05) return { text: `DCR ${REGISTERS[(op >> 3) & 7]}`, size: 1 };
-    if ((op & 0xcf) === 0x03) return { text: `INX ${PAIRS[(op >> 4) & 3]}`, size: 1 };
-    if ((op & 0xcf) === 0x0b) return { text: `DCX ${PAIRS[(op >> 4) & 3]}`, size: 1 };
-    if ((op & 0xcf) === 0x09) return { text: `DAD ${PAIRS[(op >> 4) & 3]}`, size: 1 };
+    if (op >= 0x40 && op <= 0x7f) return { text: op === 0x76 ? "HLT" : `MOV ${REGISTERS[(op >> 3) & 7]},${REGISTERS[op & 7]}`, size: 1, defined: true };
+    if (op >= 0x80 && op <= 0xbf) return { text: `${ALU_NAMES[(op >> 3) & 7]} ${REGISTERS[op & 7]}`, size: 1, defined: true };
+    if ((op & 0xc7) === 0x06) return { text: `MVI ${REGISTERS[(op >> 3) & 7]},${hex(next)}H`, size: 2, defined: true };
+    if ((op & 0xcf) === 0x01) return { text: `LXI ${PAIRS[(op >> 4) & 3]},${hex(next | (hi << 8), 4)}H`, size: 3, defined: true };
+    if ((op & 0xc7) === 0x04) return { text: `INR ${REGISTERS[(op >> 3) & 7]}`, size: 1, defined: true };
+    if ((op & 0xc7) === 0x05) return { text: `DCR ${REGISTERS[(op >> 3) & 7]}`, size: 1, defined: true };
+    if ((op & 0xcf) === 0x03) return { text: `INX ${PAIRS[(op >> 4) & 3]}`, size: 1, defined: true };
+    if ((op & 0xcf) === 0x0b) return { text: `DCX ${PAIRS[(op >> 4) & 3]}`, size: 1, defined: true };
+    if ((op & 0xcf) === 0x09) return { text: `DAD ${PAIRS[(op >> 4) & 3]}`, size: 1, defined: true };
     if ([0xc3, 0xc2, 0xca, 0xd2, 0xda, 0xe2, 0xea, 0xf2, 0xfa, 0xcd, 0xc4, 0xcc, 0xd4, 0xdc, 0xe4, 0xec, 0xf4, 0xfc, 0x22, 0x2a, 0x32, 0x3a].includes(op)) {
       const labels = { 0xc3: "JMP", 0xc2: "JNZ", 0xca: "JZ", 0xd2: "JNC", 0xda: "JC", 0xe2: "JPO", 0xea: "JPE", 0xf2: "JP", 0xfa: "JM", 0xcd: "CALL", 0xc4: "CNZ", 0xcc: "CZ", 0xd4: "CNC", 0xdc: "CC", 0xe4: "CPO", 0xec: "CPE", 0xf4: "CP", 0xfc: "CM", 0x22: "SHLD", 0x2a: "LHLD", 0x32: "STA", 0x3a: "LDA" };
-      return { text: `${labels[op]} ${hex(next | (hi << 8), 4)}H`, size: 3 };
+      return { text: `${labels[op]} ${hex(next | (hi << 8), 4)}H`, size: 3, defined: true };
     }
-    if (Object.prototype.hasOwnProperty.call(FIXED, Object.keys(FIXED).find((key) => FIXED[key] === op))) return { text: Object.keys(FIXED).find((key) => FIXED[key] === op), size: 1 };
-    return { text: `DB ${hex(op)}H`, size: 1 };
+    if ((op & 0xef) === 0x02) return { text: `STAX ${op & 0x10 ? "D" : "B"}`, size: 1, defined: true };
+    if ((op & 0xef) === 0x0a) return { text: `LDAX ${op & 0x10 ? "D" : "B"}`, size: 1, defined: true };
+    if ((op & 0xcf) === 0xc5 || (op & 0xcf) === 0xc1) {
+      const pair = (op >> 4) & 3;
+      return { text: `${(op & 0xcf) === 0xc5 ? "PUSH" : "POP"} ${pair === 3 ? "PSW" : PAIRS[pair]}`, size: 1, defined: true };
+    }
+    const immediate = { 0xc6: "ADI", 0xce: "ACI", 0xd6: "SUI", 0xde: "SBI", 0xe6: "ANI", 0xee: "XRI", 0xf6: "ORI", 0xfe: "CPI" };
+    if (immediate[op]) return { text: `${immediate[op]} ${hex(next)}H`, size: 2, defined: true };
+    if (op === 0xdb || op === 0xd3) return { text: `${op === 0xdb ? "IN" : "OUT"} ${hex(next)}H`, size: 2, defined: true };
+    const returns = { 0xc0: "RNZ", 0xc8: "RZ", 0xd0: "RNC", 0xd8: "RC", 0xe0: "RPO", 0xe8: "RPE", 0xf0: "RP", 0xf8: "RM" };
+    if (returns[op]) return { text: returns[op], size: 1, defined: true };
+    if ((op & 0xc7) === 0xc7) return { text: `RST ${(op >> 3) & 7}`, size: 1, defined: true };
+    const fixedName = Object.keys(FIXED).find((key) => FIXED[key] === op);
+    if (fixedName) return { text: fixedName, size: 1, defined: true };
+    return { text: `DB ${hex(op)}H`, size: 1, defined: false };
   }
 
-  return { CPU8085, assemble, AssemblerError, disassemble, hex, parity, add8, calculate8 };
+  function loadMachine(source, origin) {
+    let pc = origin & 0xffff;
+    const events = [];
+    source.split(/\r?\n/).forEach((raw, index) => {
+      const line = index + 1;
+      const text = raw.replace(/;.*$/, "").trim();
+      if (!text) return;
+      const org = text.match(/^ORG\s+([0-9A-F]{1,4})H?$/i);
+      if (org) {
+        events.push({ type: "org", pc: parseInt(org[1], 16), line });
+        return;
+      }
+      for (const part of text.split(/[\s,]+/)) {
+        const token = part.replace(/H$/i, "");
+        if (!/^[0-9A-F]{1,2}$/i.test(token)) throw new Error(`Line ${line}: invalid machine code ${part}`);
+        events.push({ type: "byte", value: parseInt(token, 16), line });
+      }
+    });
+    const memory = new Uint8Array(65536), occupied = new Uint8Array(65536), listing = [];
+    let index = 0;
+    while (index < events.length) {
+      const event = events[index];
+      if (event.type === "org") { pc = event.pc; index++; continue; }
+      const start = index;
+      const peek = (offset) => events[start + offset]?.type === "byte" ? events[start + offset].value : 0;
+      memory[pc] = peek(0);
+      memory[(pc + 1) & 0xffff] = peek(1);
+      memory[(pc + 2) & 0xffff] = peek(2);
+      const decoded = disassemble(memory, pc);
+      if (!decoded.defined) throw new Error(`Line ${event.line}: undefined machine code ${hex(event.value)}`);
+      if (start + decoded.size > events.length || events.slice(start, start + decoded.size).some((item) => item.type !== "byte")) {
+        throw new Error(`Line ${event.line}: incomplete instruction ${hex(event.value)}`);
+      }
+      const bytes = [];
+      for (let offset = 0; offset < decoded.size; offset++) {
+        const address = (pc + offset) & 0xffff;
+        const item = events[start + offset];
+        if (occupied[address]) throw new Error(`Line ${item.line}: address overlap ${hex(address, 4)}`);
+        bytes.push(item.value);
+        memory[address] = item.value;
+        occupied[address] = 1;
+      }
+      for (let offset = decoded.size; offset < 3; offset++) {
+        const address = (pc + offset) & 0xffff;
+        if (!occupied[address]) memory[address] = 0;
+      }
+      listing.push({ address: pc, bytes, text: disassemble(memory, pc).text, line: event.line });
+      pc = (pc + decoded.size) & 0xffff;
+      index += decoded.size;
+    }
+    return { memory, occupied, listing, symbols: Object.create(null), entry: listing.length ? listing[0].address : (origin & 0xffff) };
+  }
+
+  return { CPU8085, assemble, AssemblerError, disassemble, loadMachine, hex, parity, add8, calculate8 };
 });
