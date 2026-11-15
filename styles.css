@@ -487,11 +487,14 @@ body { min-height: 0; }
     width: 70%; max-width: 70%; min-width: 0; min-height: 38px;
     flex: 0 1 70%; padding: 8px 10px; font-size: 11px;
   }
-  .editor-wrap { height: 52vh; min-height: 310px; max-height: 560px; flex: none; margin-top: 10px; }
-  .editor-tabs button { min-height: 36px; }
+  .editor-wrap { height: 42vh; min-height: 240px; max-height: 560px; flex: none; margin-top: 10px; }
+  .editor-tabs { display: grid; grid-template-columns: 1fr 1fr; }
+  .editor-tabs button { min-width: 0; min-height: 44px; white-space: normal; line-height: 1.2; padding: 6px 8px; font-size: 13px; }
+  #originLabel { width: 100%; justify-content: space-between; }
+  #originLabel input { width: 96px; min-height: 44px; font-size: 16px; }
   .editor-gutter { width: 35px; flex-basis: 35px; padding: 11px 6px; font-size: 11px; }
   .sample-select select, .address-input input { font-size: 16px; }
-  #source { padding: 11px 9px; font-size: 16px; line-height: 1.8; }
+  #source, #machineSource { padding: 11px 9px; font-size: 16px; line-height: 1.8; }
   .flow-panel { min-height: 0; height: auto; padding: 13px; }
   .flow-panel .panel-heading { align-items: flex-start; gap: 7px; }
   .flow-live { max-width: 42%; font-size: 9px; }

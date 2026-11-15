@@ -4,7 +4,6 @@
   const first = $("#hexA");
   const second = $("#hexB");
   const marks = { add: "+", sub: "−", mul: "×", div: "÷" };
-  let active = first;
   let operation = "add";
 
   function clean(input) {
@@ -98,19 +97,7 @@
       render();
     });
   });
-  [first, second].forEach((input) => {
-    input.addEventListener("focus", () => { active = input; });
-    input.addEventListener("input", render);
-  });
-  $("#hexPad").addEventListener("click", (event) => {
-    const key = event.target.closest("button")?.dataset.key;
-    if (!key) return;
-    if (key === "back") active.value = active.value.slice(0, -1);
-    else if (key === "clear") active.value = "";
-    else active.value = (active.value + key).replace(/[^0-9A-F]/g, "").slice(-2);
-    active.focus();
-    render();
-  });
+  [first, second].forEach((input) => input.addEventListener("input", render));
   render();
   first.focus();
 })();

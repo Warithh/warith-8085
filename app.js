@@ -496,12 +496,14 @@ LOOP:   DCR B
     for (const [name, value] of Object.entries(cpu.flags)) document.querySelector(`[data-flag="${name}"]`).classList.toggle("active", value);
     renderMemory();
     renderStack();
-    renderListing();
+    if (inputMode === "machine") renderMachinePreview();
+    else renderListing();
     $("#stepBtn").disabled = !program || cpu.halted || !!timer || flowAnimating;
     $("#runBtn").disabled = !program;
     $("#resetBtn").disabled = !program;
   }
   let inputMode = "assembly";
+  const builtProgram = { assembly: null, machine: null };
   function setInputMode(mode) {
     inputMode = mode;
     const machine = mode === "machine";
@@ -512,8 +514,23 @@ LOOP:   DCR B
     $("#assemblyTab").setAttribute("aria-selected", String(!machine));
     $("#machineTab").setAttribute("aria-selected", String(machine));
     $("#editorTitle").textContent = machine ? "Machine Language Code" : "Assembly Code Editor";
-    if (machine) renderMachinePreview();
-    else render();
+    if (timer) { clearInterval(timer); timer = null; }
+    $("#runBtn").innerHTML = `<span class="button-icon">▶</span><span data-i18n="run">${t("run")}</span><kbd>F5</kbd>`;
+    const chosen = builtProgram[mode];
+    if (chosen) {
+      program = chosen;
+      cpu.load(program);
+      lastStep = null;
+      clearFlow();
+      setStateKey("ready");
+    } else {
+      program = null;
+      cpu.reset();
+      lastStep = null;
+      clearFlow();
+      setStateKey("stopped");
+    }
+    render();
   }
   function machineOrigin() {
     const originText = $("#machineOrigin").value.trim().toUpperCase();
@@ -549,6 +566,7 @@ LOOP:   DCR B
         if (!$("#machineSource").value.trim()) throw new Error("Enter machine codes, then assemble them.");
         program = I8085.loadMachine($("#machineSource").value, machineOrigin());
       } else program = I8085.assemble(source.value);
+      builtProgram[inputMode] = program;
       cpu.load(program);
       lastStep = null;
       clearFlow();
@@ -638,6 +656,7 @@ LOOP:   DCR B
     pause();
     source.value = samples[event.target.value].en;
     program = null;
+    builtProgram.assembly = null;
     lastStep = null;
     cpu.reset();
     clearFlow();
