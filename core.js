@@ -23,6 +23,42 @@
     while (bits) { ones ^= 1; bits &= bits - 1; }
     return ones === 0;
   }
+  function sizeFlags(result, extra) {
+    const byte = result & 255;
+    return {
+      S: !!(byte & 0x80),
+      Z: byte === 0,
+      P: parity(byte),
+      AC: false,
+      CY: false,
+      ...extra,
+    };
+  }
+  function calculate8(operation, left, right) {
+    const a = left & 255, b = right & 255;
+    if (operation === "add") {
+      const full = a + b;
+      return { result: full & 255, full, flags: sizeFlags(full, { AC: (a & 15) + (b & 15) > 15, CY: full > 255 }) };
+    }
+    if (operation === "sub") {
+      const result = (a - b) & 255;
+      return { result, full: a - b, flags: sizeFlags(result, { AC: (a & 15) < (b & 15), CY: a < b }) };
+    }
+    if (operation === "mul") {
+      const full = a * b;
+      return { result: full & 255, full, flags: sizeFlags(full, { CY: full > 255 }) };
+    }
+    if (operation === "div") {
+      if (b === 0) return { error: true };
+      const result = Math.floor(a / b), remainder = a % b;
+      return { result, remainder, full: result, flags: sizeFlags(result, { CY: remainder !== 0 }) };
+    }
+    throw new Error("unknown operation");
+  }
+  function add8(left, right) {
+    const { result, flags } = calculate8("add", left, right);
+    return { result, flags };
+  }
   function parseNumber(text, symbols, line) {
     const source = text.replace(/\s+/g, "");
     if (/^'.*'$/.test(source) && source.length >= 3) return source.charCodeAt(1);
@@ -543,5 +579,5 @@
     return { text: `DB ${hex(op)}H`, size: 1 };
   }
 
-  return { CPU8085, assemble, AssemblerError, disassemble, hex, parity };
+  return { CPU8085, assemble, AssemblerError, disassemble, hex, parity, add8, calculate8 };
 });

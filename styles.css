@@ -531,6 +531,15 @@ body { min-height: 0; }
   .stack-panel { display: block; padding: 13px; }
   .stack-view { max-height: 28vh; overflow: auto; }
 }
+a.calculator-open {
+  min-height: 26px; display: inline-flex; align-items: center; border: 1px solid var(--tblr-primary); border-radius: 999px; padding: 3px 12px;
+  color: white; background: var(--tblr-primary); font-size: 12px; font-weight: 750; text-decoration: none; cursor: pointer;
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--tblr-primary) 22%, transparent);
+}
+a.calculator-open:hover { background: color-mix(in srgb, var(--tblr-primary) 88%, black); }
+@media (max-width: 900px) {
+  a.calculator-open { min-height: 34px; font-size: 12px; }
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
