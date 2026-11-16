@@ -415,21 +415,25 @@ body { min-height: 0; }
   body { min-height: 100dvh; padding-bottom: env(safe-area-inset-bottom); }
   .app-shell { width: 100%; height: auto; min-height: 100dvh; overflow: visible; }
   .topbar {
-    position: sticky; top: 0; z-index: 20; height: calc(52px + env(safe-area-inset-top));
-    min-height: calc(52px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 14px 0;
+    position: sticky; top: 0; z-index: 20; height: auto; flex-wrap: wrap; row-gap: 8px;
+    min-height: 0; padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
     border-bottom-color: #e7ecef; background: #ffffffed;
   }
-  .brand { gap: 9px; }
+  .brand { gap: 9px; min-width: 0; }
   .brand-chip { width: 32px; height: 32px; border-radius: 10px; font-size: 13px; }
   .brand-copy strong { font-size: 14px; }
   .brand-copy small { display: block; font-size: 9px; }
+  .topbar-actions {
+    flex: 1 0 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px; min-width: 0; justify-content: stretch;
+  }
   .install-app {
-    min-height: 36px; border: 1px solid #cfe4df; border-radius: 10px; padding: 6px 11px;
+    grid-column: 1 / -1; min-height: 36px; border: 1px solid #cfe4df; border-radius: 10px; padding: 6px 11px;
     color: #167668; background: #f0f8f5; font-size: 12px; font-weight: 700;
   }
   .install-app[hidden] { display: none; }
   .mobile-tabs {
-    position: sticky; top: calc(52px + env(safe-area-inset-top)); z-index: 15;
+    position: sticky; top: 0; z-index: 15;
     display: flex; flex-direction: column; gap: 6px;
     padding: 8px 10px; border-bottom: 1px solid #e8edef; background: #f4f7fbf2;
     backdrop-filter: blur(14px);
@@ -572,7 +576,7 @@ a.calculator-open {
 }
 a.calculator-open:hover { background: color-mix(in srgb, var(--tblr-primary) 88%, black); }
 @media (max-width: 900px) {
-  a.calculator-open { min-height: 34px; font-size: 12px; }
+  a.calculator-open { min-height: 44px; justify-content: center; padding: 6px 4px; font-size: 13px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

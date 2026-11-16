@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "warith-8085-v1.9.0";
+const CACHE_NAME = "warith-8085-v1.9.1";
 const APP_SHELL = [
   "./",
   "./index.html",
