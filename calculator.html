@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f4f7fb">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; frame-src 'none'">
   <title>Calculator</title>
-  <link rel="stylesheet" href="calculator.css">
+  <link rel="stylesheet" href="calculator.css?v=180">
 </head>
 <body>
   <main class="sheet">
@@ -14,47 +14,47 @@
       <div>
         <p class="kicker">HEX · 8 BIT</p>
         <h1>Calculator</h1>
-        <p>اكتب العددين، ثم اختر العملية. الناتج والأعلام تُحسب مما أدخلته.</p>
+        <p>Type two bytes, then choose the operation. The result and flags come from what you typed.</p>
       </div>
-      <a class="back" href="index.html">العودة إلى المختبر</a>
+      <a class="back" href="index.html">Back</a>
     </header>
 
-    <div class="ops" dir="ltr" role="group" aria-label="العملية">
+    <div class="ops" role="group" aria-label="Operation">
       <button type="button" data-op="add" aria-pressed="true">+</button>
       <button type="button" data-op="sub" aria-pressed="false">−</button>
       <button type="button" data-op="mul" aria-pressed="false">×</button>
       <button type="button" data-op="div" aria-pressed="false">÷</button>
     </div>
 
-    <section class="sum" dir="ltr" aria-label="العددان والناتج">
+    <section class="sum" aria-label="Operands and result">
       <label class="field">
         <span>A</span>
-        <input id="hexA" maxlength="2" spellcheck="false" autocomplete="off" autocapitalize="characters" placeholder="—" aria-label="العدد الأول">
+        <input id="hexA" maxlength="2" spellcheck="false" autocomplete="off" autocapitalize="characters" placeholder="—" aria-label="First byte">
         <small id="hexADec">—</small>
       </label>
       <b id="opMark" class="op">+</b>
       <label class="field">
         <span>B</span>
-        <input id="hexB" maxlength="2" spellcheck="false" autocomplete="off" autocapitalize="characters" placeholder="—" aria-label="العدد الثاني">
+        <input id="hexB" maxlength="2" spellcheck="false" autocomplete="off" autocapitalize="characters" placeholder="—" aria-label="Second byte">
         <small id="hexBDec">—</small>
       </label>
       <b class="op">=</b>
       <div class="field result" aria-live="polite">
         <span>Result</span>
         <strong id="hexResult">—</strong>
-        <small id="hexResultDec">أدخل العددين</small>
+        <small id="hexResultDec">Enter both bytes</small>
       </div>
     </section>
 
     <p id="hexFull" class="full"></p>
-    <p id="hexWait" class="wait">اكتب العددين. لكل عدد من رقم إلى رقمين، مثل 2A أو FF.</p>
+    <p id="hexWait" class="wait">Type both bytes. Each is one or two hex digits, such as 2A or FF.</p>
 
     <section class="details">
       <div id="hexBits" class="bit-board" dir="ltr" hidden></div>
-      <div id="hexFlags" class="flags" aria-label="الأعلام"></div>
+      <div id="hexFlags" class="flags" aria-label="Flags"></div>
     </section>
   </main>
   <script src="core.js"></script>
-  <script src="calculator.js"></script>
+  <script src="calculator.js?v=180"></script>
 </body>
 </html>

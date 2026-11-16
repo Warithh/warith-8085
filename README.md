@@ -1,30 +1,21 @@
 # WARITH 8085
 
-محاكي Intel 8085 تعليمي يعمل في المتصفح، مع واجهة هاتف ودعم العمل دون اتصال بعد أول زيارة.
+An Intel 8085 learning lab that runs in the browser, including a phone layout and offline use after the first visit.
 
-## تشغيل المحاكي
+## Open the lab
 
-افتح https://warithh.github.io/warith-8085/ على الهاتف. على Android استخدم Chrome واختر **Install app** أو **Add to Home screen**. على iPhone استخدم Safari واختر **Share → Add to Home Screen**. يحتاج التثبيت والزيارة الأولى إلى اتصال بالإنترنت.
+Open https://warithh.github.io/warith-8085/ on a phone or a computer. On Android, use Chrome and choose **Install app** or **Add to Home screen**. On iPhone, use Safari and choose **Share → Add to Home Screen**. The first visit needs a network connection.
 
-من الشريط العلوي افتح **Calculator** لجمع وطرح وضرب وقسمة أعداد سداسية عشرية، مع الأعلام الناتجة.
+Choose an example or write a program, then press **Assemble**. Use **Step** for one instruction, **Run** for continuous execution, and **Reset** to return to the start. The phone tabs are Code, Flow, Registers, and Memory. Each tab has **Back**: it returns to Code, and from Code it returns to the previous page.
 
-في المحرر اختر **Machine Language Code** واكتب أكواد الآلة. يظهر التجميع في قائمة التعليمات، ثم **Assemble** يحمّله إلى الذاكرة والمسجلات ومسار البيانات مثل محرر Assembly.
+**Kit** opens the MTK-85 trainer. **Calculator** adds, subtracts, multiplies, and divides one byte and shows the same flags as the processor. Both pages have **Back** to the lab.
 
-اختر مثالًا أو اكتب برنامجًا، ثم اضغط **Assemble**. استخدم **Step** للتنفيذ خطوةً واحدة، أو **Run** للتنفيذ المستمر، و**Reset** لإعادة البرنامج إلى بدايته. تعرض تبويبات الهاتف الكود، ومسار حركة البيانات، والمسجلات، والذاكرة.
+## Files
 
-## الملفات
-
-- `index.html` — الصفحة ومكونات واجهة المحاكي.
-- `calculator.html` — صفحة Calculator للعمليات السداسية عشر.
-- `styles.css` — تنسيق الواجهة المكتبية وواجهة الهاتف.
-- `app.js` و`core.js` — تفاعل المحاكي ونواة 8085.
-- `manifest.webmanifest` و`service-worker.js` — التثبيت من المتصفح والتشغيل دون اتصال.
-- `assets/` — أيقونات التطبيق وملف CSS التابع لـ Tabler ورخصته.
-
-## الخصوصية
-
-لا يحتاج التطبيق إلى حساب أو خادم خلفي. تنفيذ البرامج وحالتها تتم محليًا في المتصفح. لا يحتوي هذا المستودع على مفاتيح API أو كلمات مرور أو ملفات اعتماد.
-
-## رخصة الأصول
-
-يتضمن `assets/vendor/tabler.min.css` شيفرة Tabler المرخّصة بموجب MIT؛ نص الترخيص موجود في `assets/vendor/TABLER-LICENSE.txt`.
+- `index.html` — the lab page.
+- `kit.html` — the trainer kit.
+- `calculator.html` — the one-byte calculator.
+- `styles.css`, `kit.css`, and `calculator.css` — page layout.
+- `app.js`, `core.js`, `kit.js`, `kit-monitor.js`, and `calculator.js` — the lab, the 8085 core, and the two tools.
+- `manifest.webmanifest` and `service-worker.js` — installation and offline use.
+- `assets/` — icons, the Atkinson Hyperlegible font, and the MIT-licensed Tabler CSS in `assets/vendor/TABLER-LICENSE.txt`.

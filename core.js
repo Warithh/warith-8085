@@ -64,7 +64,7 @@
     if (/^'.*'$/.test(source) && source.length >= 3) return source.charCodeAt(1);
     const terms = source.match(/[+-]?[^+-]+/g);
     if (!terms || terms.join("") !== source) {
-      throw new AssemblerError(line, `تعبير غير صالح: ${text}`);
+      throw new AssemblerError(line, `Invalid expression: ${text}`);
     }
     let result = 0;
     for (const term of terms) {
@@ -77,10 +77,10 @@
       else if (/^[01]+b$/i.test(token)) value = parseInt(token.slice(0, -1), 2);
       else if (/^\d+$/.test(token)) value = Number(token);
       else if (Object.prototype.hasOwnProperty.call(symbols, token.toUpperCase())) value = symbols[token.toUpperCase()];
-      else throw new AssemblerError(line, `رمز أو قيمة غير معروفة: ${token}`);
+      else throw new AssemblerError(line, `Unknown symbol or value: ${token}`);
       result += sign * value;
     }
-    if (!Number.isFinite(result)) throw new AssemblerError(line, "قيمة غير صالحة");
+    if (!Number.isFinite(result)) throw new AssemblerError(line, "Invalid value");
     return result;
   }
   class AssemblerError extends Error {
@@ -161,33 +161,33 @@
     if (["MVI"].includes(op) || BYTE_CODES[op] !== undefined) return 2;
     if (["LXI", "SHLD", "LHLD", "STA", "LDA"].includes(op) || COND_OPS[op]?.[1] === "jump" || COND_OPS[op]?.[1] === "call") return 3;
     if (COND_OPS[op]?.[1] === "ret" || ["MOV", "INR", "DCR", "INX", "DCX", "DAD", "ADD", "ADC", "SUB", "SBB", "ANA", "XRA", "ORA", "CMP"].includes(op)) return 1;
-    throw new AssemblerError(line, `تعليمة غير معروفة: ${op}`);
+    throw new AssemblerError(line, `Unknown instruction: ${op}`);
   }
   function assertArgs(args, count, line) {
-    if (args.length !== count) throw new AssemblerError(line, `عدد المعاملات غير صحيح؛ المتوقع ${count}`);
+    if (args.length !== count) throw new AssemblerError(line, `Incorrect operand count; expected ${count}`);
   }
   function regCode(name, line) {
     const value = REGISTERS.indexOf(name.toUpperCase());
-    if (value < 0) throw new AssemblerError(line, `مسجل غير صالح: ${name}`);
+    if (value < 0) throw new AssemblerError(line, `Invalid register: ${name}`);
     return value;
   }
   function pairCode(name, line, allowPsw) {
     const value = PAIRS.indexOf(name.toUpperCase());
     if (value >= 0) return value;
     if (allowPsw && name.toUpperCase() === "PSW") return 3;
-    throw new AssemblerError(line, `زوج مسجلات غير صالح: ${name}`);
+    throw new AssemblerError(line, `Invalid register pair: ${name}`);
   }
   function encode(item, symbols, pc) {
     const { op, args, line } = item, bytes = [];
     const value = (arg, max) => {
       const n = parseNumber(arg, symbols, line);
-      if (n < 0 || n > max) throw new AssemblerError(line, `القيمة ${arg} خارج النطاق`);
+      if (n < 0 || n > max) throw new AssemblerError(line, `${arg} out of range`);
       return n;
     };
     const emit16 = (n) => { bytes.push(n & 255, (n >> 8) & 255); };
     const one = (code) => { bytes.push(code); };
     if (op === "DB" || op === "DW") {
-      if (!args.length) throw new AssemblerError(line, `${op} يحتاج قيمة واحدة على الأقل`);
+      if (!args.length) throw new AssemblerError(line, `${op} needs at least one value`);
       for (const arg of args) {
         if (op === "DB" && /^(['"]).*\1$/.test(arg)) {
           for (const char of arg.slice(1, -1)) bytes.push(char.charCodeAt(0) & 255);
@@ -204,7 +204,7 @@
     if (op === "MOV") {
       assertArgs(args, 2, line);
       const d = regCode(args[0], line), s = regCode(args[1], line);
-      if (d === 6 && s === 6) throw new AssemblerError(line, "MOV M,M هو ترميز HLT وليس تعليمة MOV صالحة");
+      if (d === 6 && s === 6) throw new AssemblerError(line, "MOV M,M encodes HLT and is not a valid MOV instruction");
       one(0x40 | (d << 3) | s); return bytes;
     }
     if (op === "MVI") { assertArgs(args, 2, line); one(0x06 | (regCode(args[0], line) << 3)); bytes.push(value(args[1], 255)); return bytes; }
@@ -212,7 +212,7 @@
     if (["STAX", "LDAX"].includes(op)) {
       assertArgs(args, 1, line);
       const p = args[0].toUpperCase();
-      if (p !== "B" && p !== "D") throw new AssemblerError(line, `${op} يقبل B أو D فقط`);
+      if (p !== "B" && p !== "D") throw new AssemblerError(line, `${op} accepts only B or D`);
       one((op === "STAX" ? 0x02 : 0x0a) + (p === "D" ? 0x10 : 0)); return bytes;
     }
     if (["SHLD", "LHLD", "STA", "LDA"].includes(op)) {
@@ -234,7 +234,7 @@
       if (kind !== "ret") emit16(value(args[0], 65535));
       return bytes;
     }
-    throw new AssemblerError(line, `تعليمة غير مدعومة: ${op}`);
+    throw new AssemblerError(line, `Unsupported instruction: ${op}`);
   }
 
   function assemble(source) {
@@ -247,27 +247,27 @@
     let pc = 0;
     for (const item of items) {
       if (item.op === "EQU") {
-        if (!item.label) throw new AssemblerError(item.line, "EQU يحتاج اسماً");
+        if (!item.label) throw new AssemblerError(item.line, "EQU needs a name");
         symbols[item.label] = parseNumber(item.args[0], symbols, item.line);
         continue;
       }
       if (item.op === "ORG") {
         assertArgs(item.args, 1, item.line);
         pc = parseNumber(item.args[0], symbols, item.line);
-        if (pc < 0 || pc > 0xffff) throw new AssemblerError(item.line, "عنوان ORG خارج نطاق الذاكرة");
+        if (pc < 0 || pc > 0xffff) throw new AssemblerError(item.line, "ORG address is outside memory");
         continue;
       }
       if (item.label) {
-        if (Object.prototype.hasOwnProperty.call(symbols, item.label)) throw new AssemblerError(item.line, `الاسم مكرر: ${item.label}`);
+        if (Object.prototype.hasOwnProperty.call(symbols, item.label)) throw new AssemblerError(item.line, `Duplicate name: ${item.label}`);
         symbols[item.label] = pc;
       }
       if (item.op === "DS") {
         assertArgs(item.args, 1, item.line);
         const n = parseNumber(item.args[0], symbols, item.line);
-        if (n < 0 || n > 65536) throw new AssemblerError(item.line, "حجم DS خارج النطاق");
+        if (n < 0 || n > 65536) throw new AssemblerError(item.line, "DS size is out of range");
         item.reserve = n; pc += n;
       } else pc += instructionSize(item.op, item.args, item.line);
-      if (pc > 65536) throw new AssemblerError(item.line, "تجاوز البرنامج مساحة الذاكرة 64KB");
+      if (pc > 65536) throw new AssemblerError(item.line, "Program exceeds the 64 KB memory space");
     }
     const bytes = new Uint8Array(65536), occupied = new Uint8Array(65536), listing = [];
     pc = 0;
@@ -282,10 +282,10 @@
         continue;
       }
       const encoded = encode(item, symbols, pc);
-      if (pc + encoded.length > 65536) throw new AssemblerError(item.line, "تجاوز البرنامج مساحة الذاكرة 64KB");
+      if (pc + encoded.length > 65536) throw new AssemblerError(item.line, "Program exceeds the 64 KB memory space");
       for (let i = 0; i < encoded.length; i++) {
         const address = pc + i;
-        if (occupied[address]) throw new AssemblerError(item.line, `تداخل في العنوان ${hex(address, 4)}`);
+        if (occupied[address]) throw new AssemblerError(item.line, `Address overlap at ${hex(address, 4)}`);
         bytes[address] = encoded[i]; occupied[address] = 1;
       }
       listing.push({ address: pc, bytes: encoded, text: lines[item.line - 1].trim(), line: item.line });
@@ -383,25 +383,25 @@
         const value = this.readReg(r), address = r === 6 || d === 6 ? this.pair("H") : null;
         this.writeReg(d, value); name = `MOV ${REGISTERS[d]},${REGISTERS[r]}`;
         flow = r === 6
-          ? { from: "memory", to: "registers", action: `قراءة ${hex(value)}H إلى ${REGISTERS[d]}`, value, address }
+          ? { from: "memory", to: "registers", action: `Read ${hex(value)}H into ${REGISTERS[d]}`, value, address }
           : d === 6
-            ? { from: "registers", to: "memory", action: `تخزين ${hex(value)}H من ${REGISTERS[r]}`, value, address }
-            : { from: "registers", to: "registers", action: `نسخ ${REGISTERS[r]} إلى ${REGISTERS[d]}`, value };
+            ? { from: "registers", to: "memory", action: `Store ${hex(value)}H from ${REGISTERS[r]}`, value, address }
+            : { from: "registers", to: "registers", action: `Copy ${REGISTERS[r]} to ${REGISTERS[d]}`, value };
       }
       else if (op >= 0x80 && op <= 0xbf) {
         const operand = this.readReg(r), oldA = this.reg.A;
         this.alu(d, operand); name = `${ALU_NAMES[d]} ${REGISTERS[r]}`;
         flow = { from: r === 6 ? "memory" : "registers", to: d === 7 ? "registers" : "cpu",
-          action: `${ALU_NAMES[d]}: ${hex(oldA)}H ${d < 4 ? "+" : "عملية"} ${hex(operand)}H${d === 7 ? " ← تحديث الأعلام" : ` = ${hex(this.reg.A)}H`}`,
+          action: `${ALU_NAMES[d]}: ${hex(oldA)}H ${d < 4 ? "+" : "op"} ${hex(operand)}H${d === 7 ? " update flags" : ` = ${hex(this.reg.A)}H`}`,
           value: d === 7 ? operand : this.reg.A, address: r === 6 ? this.pair("H") : null };
       }
       else if ((op & 0xc7) === 0x06) {
         const value = this.fetch8(); this.writeReg(d, value); name = `MVI ${REGISTERS[d]}`;
-        flow = { from: "program", to: d === 6 ? "memory" : "registers", action: `تحميل ${hex(value)}H إلى ${REGISTERS[d]}`, value, address: d === 6 ? this.pair("H") : null };
+        flow = { from: "program", to: d === 6 ? "memory" : "registers", action: `Load ${hex(value)}H into ${REGISTERS[d]}`, value, address: d === 6 ? this.pair("H") : null };
       }
       else if ((op & 0xcf) === 0x01) {
         const value = this.fetch16(); this.setPair(PAIRS[pair], value); name = `LXI ${PAIRS[pair]}`;
-        flow = { from: "program", to: "registers", action: `تحميل ${hex(value, 4)}H إلى ${PAIRS[pair]}`, value };
+        flow = { from: "program", to: "registers", action: `Load ${hex(value, 4)}H into ${PAIRS[pair]}`, value };
       }
       else if ((op & 0xcf) === 0x03) { this.setPair(PAIRS[pair], this.pair(PAIRS[pair]) + 1); name = `INX ${PAIRS[pair]}`; }
       else if ((op & 0xcf) === 0x0b) { this.setPair(PAIRS[pair], this.pair(PAIRS[pair]) - 1); name = `DCX ${PAIRS[pair]}`; }
@@ -409,34 +409,34 @@
         const result = this.pair("H") + this.pair(PAIRS[pair]); this.flags.CY = result > 0xffff; this.setPair("H", result); name = `DAD ${PAIRS[pair]}`;
       } else if ((op & 0xc7) === 0x04) {
         const old = this.readReg(d), result = (old + 1) & 255; this.flags.AC = (old & 15) === 15; this.setSZP(result); this.writeReg(d, result); name = `INR ${REGISTERS[d]}`;
-        if (d === 6) flow = { from: "memory", to: "memory", action: `تحديث بايت الذاكرة عند ${hex(this.pair("H"), 4)}H إلى ${hex(result)}H`, value: result, address: this.pair("H") };
+        if (d === 6) flow = { from: "memory", to: "memory", action: `Update memory byte at ${hex(this.pair("H"), 4)}H to ${hex(result)}H`, value: result, address: this.pair("H") };
       } else if ((op & 0xc7) === 0x05) {
         const old = this.readReg(d), result = (old - 1) & 255; this.flags.AC = (old & 15) === 0; this.setSZP(result); this.writeReg(d, result); name = `DCR ${REGISTERS[d]}`;
-        if (d === 6) flow = { from: "memory", to: "memory", action: `تحديث بايت الذاكرة عند ${hex(this.pair("H"), 4)}H إلى ${hex(result)}H`, value: result, address: this.pair("H") };
+        if (d === 6) flow = { from: "memory", to: "memory", action: `Update memory byte at ${hex(this.pair("H"), 4)}H to ${hex(result)}H`, value: result, address: this.pair("H") };
       } else if (op === 0x02 || op === 0x12) {
         const address = this.pair(op === 0x02 ? "B" : "D"), value = this.reg.A;
         this.memory[address] = value; name = "STAX";
-        flow = { from: "registers", to: "memory", action: `تخزين A = ${hex(value)}H في الذاكرة`, value, address };
+        flow = { from: "registers", to: "memory", action: `Store A = ${hex(value)}H in memory`, value, address };
       }
       else if (op === 0x0a || op === 0x1a) {
         const address = this.pair(op === 0x0a ? "B" : "D"), value = this.memory[address];
         this.reg.A = value; name = "LDAX";
-        flow = { from: "memory", to: "registers", action: `قراءة ${hex(value)}H من الذاكرة إلى A`, value, address };
+        flow = { from: "memory", to: "registers", action: `Read ${hex(value)}H from memory into A`, value, address };
       }
       else if (op === 0x22 || op === 0x2a || op === 0x32 || op === 0x3a) {
         const addr = this.fetch16();
         if (op === 0x22) {
           this.memory[addr] = this.reg.L; this.memory[(addr + 1) & 0xffff] = this.reg.H; name = "SHLD";
-          flow = { from: "registers", to: "memory", action: `تخزين HL = ${hex(this.pair("H"), 4)}H ابتداءً من الذاكرة`, value: this.pair("H"), address: addr, width: 2 };
+          flow = { from: "registers", to: "memory", action: `Store HL = ${hex(this.pair("H"), 4)}H starting in memory`, value: this.pair("H"), address: addr, width: 2 };
         } else if (op === 0x2a) {
           this.reg.L = this.memory[addr]; this.reg.H = this.memory[(addr + 1) & 0xffff]; name = "LHLD";
-          flow = { from: "memory", to: "registers", action: `تحميل HL = ${hex(this.pair("H"), 4)}H من الذاكرة`, value: this.pair("H"), address: addr, width: 2 };
+          flow = { from: "memory", to: "registers", action: `Load HL = ${hex(this.pair("H"), 4)}H from memory`, value: this.pair("H"), address: addr, width: 2 };
         } else if (op === 0x32) {
           this.memory[addr] = this.reg.A; name = "STA";
-          flow = { from: "registers", to: "memory", action: `تخزين A = ${hex(this.reg.A)}H في الذاكرة`, value: this.reg.A, address: addr };
+          flow = { from: "registers", to: "memory", action: `Store A = ${hex(this.reg.A)}H in memory`, value: this.reg.A, address: addr };
         } else {
           this.reg.A = this.memory[addr]; name = "LDA";
-          flow = { from: "memory", to: "registers", action: `تحميل A = ${hex(this.reg.A)}H من الذاكرة`, value: this.reg.A, address: addr };
+          flow = { from: "memory", to: "registers", action: `Load A = ${hex(this.reg.A)}H from memory`, value: this.reg.A, address: addr };
         }
       } else if (op === 0x07 || op === 0x0f || op === 0x17 || op === 0x1f) {
         const a = this.reg.A, oldCarry = this.flags.CY;
@@ -462,8 +462,8 @@
           if (isCall) {
             const returnAddress = this.PC;
             this.push(returnAddress);
-            flow = { from: "cpu", to: "stack", action: `حفظ عنوان العودة ${hex(returnAddress, 4)}H`, value: returnAddress, address: this.SP, width: 2 };
-          } else flow = { from: "program", to: "cpu", action: `قفز إلى العنوان ${hex(addr, 4)}H`, value: addr, address: addr, width: 2 };
+            flow = { from: "cpu", to: "stack", action: `Save return address ${hex(returnAddress, 4)}H`, value: returnAddress, address: this.SP, width: 2 };
+          } else flow = { from: "program", to: "cpu", action: `Jump to ${hex(addr, 4)}H`, value: addr, address: addr, width: 2 };
           this.PC = addr;
         }
         name = isCall ? "CALL" : "JMP";
@@ -471,33 +471,33 @@
         const take = op === 0xc9 || this.condition((op >> 3) & 7);
         if (take) {
           const address = this.SP, target = this.pop(); this.PC = target;
-          flow = { from: "stack", to: "cpu", action: `سحب عنوان العودة ${hex(target, 4)}H`, value: target, address, width: 2 };
+          flow = { from: "stack", to: "cpu", action: `Pop return address ${hex(target, 4)}H`, value: target, address, width: 2 };
         }
         name = "RET";
       } else if ((op & 0xcf) === 0xc5) {
         const p = pair === 3 ? null : PAIRS[pair];
         const value = p ? this.pair(p) : ((this.reg.A << 8) | (this.flags.S ? 0x80 : 0) | (this.flags.Z ? 0x40 : 0) | (this.flags.AC ? 0x10 : 0) | (this.flags.P ? 4 : 0) | 2 | (this.flags.CY ? 1 : 0));
         if (p) this.push(value); else this.pushPSW();
-        flow = { from: "registers", to: "stack", action: `دفع ${p || "PSW"} = ${hex(value, 4)}H إلى المكدس`, value, address: this.SP, width: 2 };
+        flow = { from: "registers", to: "stack", action: `Push ${p || "PSW"} = ${hex(value, 4)}H onto the stack`, value, address: this.SP, width: 2 };
         name = "PUSH";
       } else if ((op & 0xcf) === 0xc1) {
         const value = this.pop(), p = pair === 3 ? null : PAIRS[pair];
         if (p) this.setPair(p, value); else this.popPSW(value);
-        flow = { from: "stack", to: "registers", action: `سحب ${hex(value, 4)}H إلى ${p || "PSW"}`, value, address: (this.SP - 2) & 0xffff, width: 2 };
+        flow = { from: "stack", to: "registers", action: `Pop ${hex(value, 4)}H into ${p || "PSW"}`, value, address: (this.SP - 2) & 0xffff, width: 2 };
         name = "POP";
       } else if ((op & 0xc7) === 0xc7) {
         const address = (this.SP - 2) & 0xffff, value = this.PC;
         this.push(value); this.PC = op & 0x38; name = "RST";
-        flow = { from: "cpu", to: "stack", action: `حفظ عنوان العودة ${hex(value, 4)}H`, value, address, width: 2 };
+        flow = { from: "cpu", to: "stack", action: `Save return address ${hex(value, 4)}H`, value, address, width: 2 };
       }
       else if (op === 0xe3) {
         const addr = this.SP, lo = this.memory[addr], hi = this.memory[(addr + 1) & 0xffff];
         this.memory[addr] = this.reg.L; this.memory[(addr + 1) & 0xffff] = this.reg.H;
         this.reg.L = lo; this.reg.H = hi; name = "XTHL";
-        flow = { from: "stack", to: "registers", action: `تبادل HL مع الكلمة عند SP = ${hex(addr, 4)}H`, value: (hi << 8) | lo, address: addr, width: 2 };
+        flow = { from: "stack", to: "registers", action: `Exchange HL with the word at SP = ${hex(addr, 4)}H`, value: (hi << 8) | lo, address: addr, width: 2 };
       } else if (op === 0xe9) {
         this.PC = this.pair("H"); name = "PCHL";
-        flow = { from: "registers", to: "cpu", action: `تحميل PC من HL = ${hex(this.PC, 4)}H`, value: this.PC, address: this.PC, width: 2 };
+        flow = { from: "registers", to: "cpu", action: `Load PC from HL = ${hex(this.PC, 4)}H`, value: this.PC, address: this.PC, width: 2 };
       }
       else if (op === 0xeb) {
         [this.reg.D, this.reg.H] = [this.reg.H, this.reg.D];
@@ -507,15 +507,15 @@
         const value = this.fetch8(), code = Object.values(BYTE_CODES).indexOf(op), oldA = this.reg.A;
         this.alu(code, value); name = ALU_IMM[code];
         flow = { from: "program", to: "registers",
-          action: `${ALU_IMM[code]}: ${hex(oldA)}H مع ${hex(value)}H${code === 7 ? " ← تحديث الأعلام" : ` = ${hex(this.reg.A)}H`}`,
+          action: `${ALU_IMM[code]}: ${hex(oldA)}H with ${hex(value)}H${code === 7 ? " update flags" : ` = ${hex(this.reg.A)}H`}`,
           value: code === 7 ? value : this.reg.A };
       } else if (op === 0xdb) {
         const port = this.fetch8(); this.reg.A = this.ports[port]; name = "IN";
-        flow = { from: "ports", to: "registers", action: `قراءة المنفذ ${hex(port)}H = ${hex(this.reg.A)}H إلى A`, value: this.reg.A, address: port };
+        flow = { from: "ports", to: "registers", action: `Read port ${hex(port)}H = ${hex(this.reg.A)}H into A`, value: this.reg.A, address: port };
       }
       else if (op === 0xd3) {
         const port = this.fetch8(); this.ports[port] = this.reg.A; name = "OUT";
-        flow = { from: "registers", to: "ports", action: `إرسال A = ${hex(this.reg.A)}H إلى المنفذ ${hex(port)}H`, value: this.reg.A, address: port };
+        flow = { from: "registers", to: "ports", action: `Send A = ${hex(this.reg.A)}H to port ${hex(port)}H`, value: this.reg.A, address: port };
       }
       else if (op === 0xf3) { this.interruptsEnabled = false; this.eiDelay = 0; name = "DI"; }
       else if (op === 0xfb) { this.eiDelay = 2; name = "EI"; }
@@ -535,7 +535,7 @@
         if (a & 0x80) this.sod = (a >> 6) & 1;
         name = "SIM";
       } else {
-        throw new Error(`تعليمة غير معرّفة عند العنوان ${hex(start, 4)}: ${hex(op)}`);
+        throw new Error(`Undefined instruction at ${hex(start, 4)}: ${hex(op)}`);
       }
       if (!flow) {
         const changedRegisters = Object.keys(this.reg).filter((key) => beforeRegisters[key] !== this.reg[key]);

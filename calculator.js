@@ -24,22 +24,22 @@
     return `<div class="bit-cells">${html}</div>`;
   }
   function explain(name, on, a, b, value) {
-    if (name === "S") return on ? "البت 7 في الناتج يساوي 1." : "البت 7 في الناتج يساوي 0.";
-    if (name === "Z") return on ? "الناتج داخل البايت هو 00H." : "الناتج ليس صفراً.";
+    if (name === "S") return on ? "Bit 7 of the result is 1." : "Bit 7 of the result is 0.";
+    if (name === "Z") return on ? "The byte result is 00H." : "The result is not zero.";
     if (name === "P") {
       let ones = 0, bits = value.result & 255;
       while (bits) { ones++; bits &= bits - 1; }
-      return `عدد البتات ذات القيمة 1 هو ${ones}، وهو ${on ? "زوجي" : "فردي"}.`;
+      return `${ones} bits are 1, an ${on ? "even" : "odd"} count.`;
     }
     if (name === "AC") {
-      if (operation === "add") return on ? `النصف السفلي ${I8085.hex(a & 15)}+${I8085.hex(b & 15)} يتجاوز F.` : `النصف السفلي ${I8085.hex(a & 15)}+${I8085.hex(b & 15)} يبقى ضمن 4 بت.`;
-      if (operation === "sub") return on ? `النصف السفلي ${I8085.hex(a & 15)} أصغر من ${I8085.hex(b & 15)}، فهناك استعارة.` : `النصف السفلي لا يحتاج استعارة.`;
-      return "هذه العملية لا تكتب المحمول المساعد.";
+      if (operation === "add") return on ? `Low nibbles ${I8085.hex(a & 15)}+${I8085.hex(b & 15)} pass F.` : `Low nibbles ${I8085.hex(a & 15)}+${I8085.hex(b & 15)} stay within 4 bits.`;
+      if (operation === "sub") return on ? `Low nibble ${I8085.hex(a & 15)} is smaller than ${I8085.hex(b & 15)}, so there is a borrow.` : "The low nibble needs no borrow.";
+      return "This operation does not write the auxiliary carry.";
     }
-    if (operation === "add") return on ? `المجموع ${a + b} أكبر من 255.` : `المجموع ${a + b} يبقى داخل البايت.`;
-    if (operation === "sub") return on ? `${I8085.hex(a)} أصغر من ${I8085.hex(b)}، فهناك استعارة.` : "العدد الأول يكفي بلا استعارة.";
-    if (operation === "mul") return on ? `الضرب ${a * b} لا يسعه بايت واحد.` : "الضرب يبقى داخل بايت واحد.";
-    return on ? `الباقي ${I8085.hex(value.remainder)}.` : "القسمة بلا باقٍ.";
+    if (operation === "add") return on ? `The sum ${a + b} is greater than 255.` : `The sum ${a + b} fits in one byte.`;
+    if (operation === "sub") return on ? `${I8085.hex(a)} is smaller than ${I8085.hex(b)}, so there is a borrow.` : "The first byte needs no borrow.";
+    if (operation === "mul") return on ? `The product ${a * b} does not fit in one byte.` : "The product fits in one byte.";
+    return on ? `Remainder ${I8085.hex(value.remainder)}.` : "The division has no remainder.";
   }
   function showEmpty(message) {
     $("#hexResult").textContent = "—";
@@ -57,12 +57,12 @@
     $("#hexADec").textContent = a === null ? "—" : String(a);
     $("#hexBDec").textContent = b === null ? "—" : String(b);
     if (a === null || b === null) {
-      showEmpty("اكتب العددين. لكل عدد من رقم إلى رقمين، مثل 2A أو FF.");
+      showEmpty("Type both bytes. Each is one or two hex digits, such as 2A or FF.");
       return;
     }
     const value = I8085.calculate8(operation, a, b);
     if (value.error) {
-      showEmpty("لا يمكن القسمة على صفر.");
+      showEmpty("Cannot divide by zero.");
       return;
     }
     $("#hexWait").hidden = true;
@@ -71,19 +71,19 @@
     const width = operation === "mul" ? 4 : operation === "add" && value.full > 255 ? 3 : 2;
     $("#hexResult").textContent = I8085.hex(shown, width);
     $("#hexResultDec").textContent = operation === "div"
-      ? `الباقي ${value.remainder}`
+      ? `Remainder ${value.remainder}`
       : String(operation === "sub" ? value.full : shown);
     $("#hexFull").innerHTML = operation === "div"
-      ? `خارج القسمة <bdi dir="ltr">${I8085.hex(value.result)}H</bdi> · الباقي <bdi dir="ltr">${I8085.hex(value.remainder)}H</bdi>`
+      ? `Quotient ${I8085.hex(value.result)}H · remainder ${I8085.hex(value.remainder)}H`
       : operation === "sub"
-        ? `فرق البايت <bdi dir="ltr">${I8085.hex(value.result)}H</bdi> · الفرق العددي <bdi dir="ltr">${value.full}</bdi>`
-        : `الناتج الكامل <bdi dir="ltr">${I8085.hex(operation === "add" ? value.full : shown, width)}H</bdi>`;
+        ? `Byte difference ${I8085.hex(value.result)}H · numeric difference ${value.full}`
+        : `Full result ${I8085.hex(operation === "add" ? value.full : shown, width)}H`;
     $("#hexBits").innerHTML = `
       <div class="bit-lane"><span>A</span>${bits(a)}</div>
       <div class="bit-lane"><span>B</span>${bits(b)}</div>
       <div class="bit-lane sum"><span>=</span>${bits(value.result)}</div>
-      <p class="bit-note">بتات الناتج داخل البايت. العلم المضيء قيمته 1.</p>`;
-    const titles = { S: "الإشارة", Z: "الصفر", AC: "محمول مساعد", P: "الازدواج", CY: "المحمول" };
+      <p class="bit-note">Bits of the result byte. A lit flag has value 1.</p>`;
+    const titles = { S: "Sign", Z: "Zero", AC: "Aux carry", P: "Parity", CY: "Carry" };
     $("#hexFlags").innerHTML = ["S", "Z", "AC", "P", "CY"].map((name) => {
       const on = value.flags[name];
       return `<article class="flag${on ? " on" : ""}"><b>${name}</b><i>${on ? "1" : "0"}</i><small>${titles[name]}. ${explain(name, on, a, b, value)}</small></article>`;
@@ -100,4 +100,13 @@
   [first, second].forEach((input) => input.addEventListener("input", render));
   render();
   first.focus();
+  if ("serviceWorker" in navigator && window.isSecureContext && location.protocol !== "file:") {
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) return;
+      refreshing = true;
+      location.reload();
+    });
+    navigator.serviceWorker.register("./service-worker.js");
+  }
 })();

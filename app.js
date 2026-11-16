@@ -135,31 +135,7 @@ LOOP:   DCR B
     $("#lineNumbers").replaceChildren(numbers);
   }
   function translateError(error) {
-    let message = error.message || String(error);
-    const rules = [
-      [/^رمز أو قيمة غير معروفة: (.+)$/, (_m, value) => `${t("unknownSymbol")}: ${value}`],
-      [/^عدد المعاملات غير صحيح؛ المتوقع (.+)$/, (_m, value) => `${t("operandCount")} ${value}`],
-      [/^مسجل غير صالح: (.+)$/, (_m, value) => `${t("invalidRegister")}: ${value}`],
-      [/^زوج مسجلات غير صالح: (.+)$/, (_m, value) => `${t("invalidPair")}: ${value}`],
-      [/^القيمة (.+) خارج النطاق$/, (_m, value) => `${value} ${t("range")}`],
-      [/^تداخل في العنوان (.+)$/, (_m, value) => `${t("overlap")}: ${value}`],
-      [/^تعليمة غير معروفة: (.+)$/, (_m, value) => `${t("unknownInstruction")}: ${value}`],
-      [/^تعليمة غير مدعومة: (.+)$/, (_m, value) => `${t("unsupportedInstruction")}: ${value}`],
-      [/^تعبير غير صالح: (.+)$/, (_m, value) => `${t("invalidExpression")}: ${value}`],
-      [/^الاسم مكرر: (.+)$/, (_m, value) => `${t("duplicateName")}: ${value}`],
-      [/^تعليمة غير معرّفة عند العنوان (.+): (.+)$/, (_m, pc, opcode) => t("unknownOpcode", pc, opcode)],
-    ];
-    for (const [pattern, formatter] of rules) {
-      const match = message.match(pattern);
-      if (match) { message = formatter(...match); break; }
-    }
-    const exact = {
-      "تجاوز البرنامج مساحة الذاكرة 64KB": "outOfMemory",
-      "عنوان ORG خارج نطاق الذاكرة": "orgRange",
-      "حجم DS خارج النطاق": "dsRange",
-      "MOV M,M هو ترميز HLT وليس تعليمة MOV صالحة": "invalidMove",
-    };
-    if (exact[message]) message = t(exact[message]);
+    const message = error.message || String(error);
     return error.line ? t("line", error.line, message) : message;
   }
   function flagsByte() {
@@ -509,7 +485,6 @@ LOOP:   DCR B
     const machine = mode === "machine";
     $("#assemblyEditor").hidden = machine;
     $("#machinePane").hidden = !machine;
-    $("#sampleLabel").hidden = machine;
     $("#originLabel").hidden = !machine;
     $("#assemblyTab").setAttribute("aria-selected", String(!machine));
     $("#machineTab").setAttribute("aria-selected", String(machine));
@@ -652,17 +627,31 @@ LOOP:   DCR B
     setStatus(t("resetDone"));
     render();
   });
+  function fillSample(id) {
+    const sourceText = samples[id].en;
+    source.value = sourceText;
+    const assembled = I8085.assemble(sourceText);
+    const lines = [`ORG ${I8085.hex(assembled.entry, 4)}`];
+    for (const row of assembled.listing) {
+      if (row.bytes.length) lines.push(row.bytes.map((byte) => I8085.hex(byte)).join(" "));
+    }
+    $("#machineSource").value = lines.join("\n");
+    $("#machineOrigin").value = I8085.hex(assembled.entry, 4);
+    updateLineNumbers();
+    updateMachineLines();
+  }
   $("#sampleSelect").addEventListener("change", (event) => {
     pause();
-    source.value = samples[event.target.value].en;
+    fillSample(event.target.value);
     program = null;
     builtProgram.assembly = null;
+    builtProgram.machine = null;
     lastStep = null;
     cpu.reset();
     clearFlow();
     setStateKey("stopped");
     setStatus(t("sampleLoaded"));
-    updateLineNumbers();
+    if (inputMode === "machine") renderMachinePreview();
     render();
   });
   $("#speed").addEventListener("input", (event) => { $("#speedValue").textContent = event.target.value; });
@@ -685,19 +674,28 @@ LOOP:   DCR B
     else if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "r") { event.preventDefault(); $("#resetBtn").click(); }
   });
   document.querySelectorAll(".mobile-tabs [data-mobile-view]").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const view = tab.dataset.mobileView;
-      document.body.dataset.mobileView = view;
-      document.querySelectorAll(".mobile-tabs [data-mobile-view]").forEach((item) => {
-        item.setAttribute("aria-selected", String(item === tab));
-      });
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      if (view === "flow") requestAnimationFrame(() => {
-        updateFlowWires();
-        if (lastStep) setFlow(lastStep.flow);
-      });
-    });
+    tab.addEventListener("click", () => showMobileView(tab.dataset.mobileView, true));
   });
+  const mobileBack = $("#mobileBack");
+  function showMobileView(view, scroll) {
+    document.body.dataset.mobileView = view;
+    document.querySelectorAll(".mobile-tabs [data-mobile-view]").forEach((item) => {
+      item.setAttribute("aria-selected", String(item.dataset.mobileView === view));
+    });
+    if (mobileBack) mobileBack.disabled = view === "program" && history.length <= 1;
+    if (scroll) window.scrollTo({ top: 0, behavior: "smooth" });
+    if (view === "flow") requestAnimationFrame(() => {
+      updateFlowWires();
+      if (lastStep) setFlow(lastStep.flow);
+    });
+  }
+  if (mobileBack) {
+    mobileBack.addEventListener("click", () => {
+      if (document.body.dataset.mobileView !== "program") showMobileView("program", true);
+      else if (history.length > 1) history.back();
+    });
+    showMobileView(document.body.dataset.mobileView || "program");
+  }
   const installButton = $("#installAppBtn");
   let installPrompt = null;
   window.addEventListener("beforeinstallprompt", (event) => {
@@ -717,6 +715,12 @@ LOOP:   DCR B
     installButton.hidden = true;
   });
   if ("serviceWorker" in navigator && window.isSecureContext && location.protocol !== "file:") {
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) return;
+      refreshing = true;
+      location.reload();
+    });
     navigator.serviceWorker.register("./service-worker.js")
       .catch((error) => console.error("Could not register the offline app worker:", error));
   }
@@ -733,6 +737,7 @@ LOOP:   DCR B
     flowObserver.observe($(".flow-map"));
     document.querySelectorAll(".flow-node").forEach((node) => flowObserver.observe(node));
   } else window.addEventListener("resize", updateFlowWires);
+  fillSample("sum");
   applyLanguage();
   setStateKey("stopped");
   setStatus(t("initialStatus"));

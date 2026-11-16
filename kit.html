@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; frame-src 'none'">
+  <title>MTK-85 — display and keys</title>
+  <link rel="stylesheet" href="kit.css?v=180">
+</head>
+<body>
+  <header class="top"><a class="back" href="index.html">Back</a></header>
+  <div class="stage">
+  <div class="kit-col">
+  <main class="face" dir="ltr" aria-label="8085 kit display and keys">
+    <div class="module">
+      <div class="bezel" id="digits"></div>
+    </div>
+    <div class="keys">
+      <div class="hex" id="hex"></div>
+      <div class="fn" id="fn"></div>
+    </div>
+    <p id="note" class="note">Boot points at 8100. Entry is in the data field.</p>
+  </main>
+  <section class="listing" aria-label="Instruction listing">
+    <h2>Instruction listing</h2>
+    <ol id="programList"></ol>
+  </section>
+  </div>
+  <aside class="sheet" aria-label="Processor flags and opcode chart">
+    <header class="sheet-head">
+      <h1>Flags</h1>
+      <p>They change with STEP and GO.</p>
+    </header>
+    <div class="flag-row" id="flags">
+      <div class="flag" data-flag="S"><b>S</b><i></i><small>Sign</small></div>
+      <div class="flag" data-flag="Z"><b>Z</b><i></i><small>Zero</small></div>
+      <div class="flag" data-flag="AC"><b>AC</b><i></i><small>Aux carry</small></div>
+      <div class="flag" data-flag="P"><b>P</b><i></i><small>Parity</small></div>
+      <div class="flag" data-flag="CY"><b>CY</b><i></i><small>Carry</small></div>
+    </div>
+    <h2>8085 opcodes</h2>
+    <div class="sheet-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Hex</th><th>Assembly</th>
+            <th>Hex</th><th>Assembly</th>
+            <th>Hex</th><th>Assembly</th>
+            <th>Hex</th><th>Assembly</th>
+          </tr>
+        </thead>
+        <tbody id="chartBody"></tbody>
+      </table>
+    </div>
+  </aside>
+  </div>
+  <script src="core.js"></script>
+  <script src="kit-monitor.js"></script>
+  <script src="kit.js?v=180"></script>
+</body>
+</html>

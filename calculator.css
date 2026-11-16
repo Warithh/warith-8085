@@ -26,7 +26,7 @@ button, input { font: inherit; color: inherit; }
 h1 { margin: 4px 0 0; font-size: 34px; letter-spacing: -.04em; }
 .head p:last-child { margin: 6px 0 0; max-width: 52ch; color: var(--muted); font-size: 14px; }
 .back {
-  flex: 0 0 auto; border: 1px solid #d5e3e4; border-radius: 999px; padding: 8px 12px;
+  flex: 0 0 auto; border: 1px solid #d5e3e4; border-radius: 14px; padding: 8px 14px;
   color: #1d6d60; background: #f4fbf8; text-decoration: none; font-size: 13px; font-weight: 700;
 }
 .ops { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 18px; }

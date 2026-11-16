@@ -1,15 +1,21 @@
 "use strict";
 
-const CACHE_NAME = "warith-8085-v1.6.0";
+const CACHE_NAME = "warith-8085-v1.8.0";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./calculator.html",
   "./calculator.css",
   "./calculator.js",
+  "./kit.html",
+  "./kit.css",
+  "./kit.js",
+  "./kit-monitor.js",
   "./styles.css",
   "./app.js",
   "./core.js",
+  "./assets/fonts/AtkinsonHyperlegible-Regular.ttf",
+  "./assets/fonts/AtkinsonHyperlegible-Bold.ttf",
   "./manifest.webmanifest",
   "./assets/vendor/tabler.min.css",
   "./assets/8085-192.png",
@@ -17,6 +23,7 @@ const APP_SHELL = [
 ];
 
 self.addEventListener("install", (event) => {
+  self.skipWaiting();
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
 });
 

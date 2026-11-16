@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="assets/8085-192.png">
   <link rel="stylesheet" href="assets/vendor/tabler.min.css">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=180">
 </head>
 <body data-mobile-view="program">
   <div class="app-shell">
@@ -21,16 +21,20 @@
         <span class="brand-copy"><strong data-i18n="brand">WARITH 8085</strong><small data-i18n="brandSub">Microprocessor learning lab</small></span>
       </a>
       <div class="topbar-actions">
+        <a class="calculator-open" href="kit.html">Kit</a>
         <a class="calculator-open" href="calculator.html">Calculator</a>
         <button id="installAppBtn" class="install-app" type="button" hidden>Install app</button>
       </div>
     </header>
 
-    <nav class="mobile-tabs" role="tablist" aria-label="Simulator panels">
+    <nav class="mobile-tabs" aria-label="Simulator panels">
+      <button type="button" id="mobileBack" class="mobile-back">Back</button>
+      <div class="mobile-tab-row" role="tablist">
       <button type="button" role="tab" data-mobile-view="program" aria-controls="editorPanel" aria-selected="true"><span>⌨</span>Code</button>
       <button type="button" role="tab" data-mobile-view="flow" aria-controls="flowPanel" aria-selected="false"><span>⇄</span>Flow</button>
       <button type="button" role="tab" data-mobile-view="state" aria-controls="statePanel" aria-selected="false"><span>A</span>Registers</button>
       <button type="button" role="tab" data-mobile-view="memory" aria-controls="memoryPanel" aria-selected="false"><span>▦</span>Memory</button>
+      </div>
     </nav>
 
     <main class="page">
@@ -164,6 +168,6 @@
     </main>
   </div>
   <script src="core.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=180"></script>
 </body>
 </html>
