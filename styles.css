@@ -424,7 +424,7 @@ body { min-height: 0; }
   .brand-copy strong { font-size: 14px; }
   .brand-copy small { display: block; font-size: 9px; }
   .topbar-actions {
-    flex: 1 0 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    flex: 1 0 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px; min-width: 0; justify-content: stretch;
   }
   .install-app {
