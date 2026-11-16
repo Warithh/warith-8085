@@ -9,7 +9,7 @@
     B: "Move", I: "Insert", D: "Delete", F: "Fill", H: "Relocate",
     J: "Compare", K: "String", A: "Assemble", C: "Disasm",
   };
-  const COUNTS = { L: 2, B: 3, F: 3, H: 3, J: 3, K: 4, D: 4, I: 4 };
+  const COUNTS = { L: 1, B: 3, F: 3, H: 3, J: 3, K: 4, D: 4, I: 4 };
 
   let mode = "ready";
   let command = "";
@@ -30,6 +30,16 @@
   }
   function fit(text) {
     return String(text).toUpperCase().padEnd(20, " ").slice(0, 20);
+  }
+  function dumpLine(addr) {
+    const here = addr & 0xffff;
+    const bytes = [0, 1, 2, 3, 4].map((offset) => hex(memory[(here + offset) & 0xffff], 2)).join(" ");
+    return `${hex(here, 4)} ${bytes}`;
+  }
+  function showList(addr) {
+    const here = addr & 0xffff;
+    lineEls[0].textContent = fit(dumpLine(here));
+    lineEls[1].textContent = fit(dumpLine((here + 5) & 0xffff));
   }
   function showAt(addr, byteText) {
     const here = addr & 0xffff;
@@ -136,7 +146,7 @@
       say(api.disassemble(memory, address).text);
       return showAt(address);
     }
-    if (mode === "list") return showAt(listAt);
+    if (mode === "list") return showList(listAt);
     if (command === "I" && mode === "insert") return showAt(address, buffer || hex(memory[address], 2));
     if (command === "F" && fields.length === 2) return showAt(fields[0], (buffer || "").padEnd(2, "_"));
     return showAt(buffer ? number(buffer, 4) : address);
@@ -205,7 +215,6 @@
     const [a, b, c, d] = values;
     if (command === "L") {
       listAt = a & 0xffff;
-      listEnd = b & 0xffff;
       address = listAt;
       mode = "list";
       say("");
@@ -376,8 +385,7 @@
     }
     if (command === "C" || mode === "list") {
       if (mode === "list") {
-        if (listAt === listEnd) return ready("End of the list.");
-        listAt = (listAt + 1) & 0xffff;
+        listAt = (listAt + 5) & 0xffff;
         address = listAt;
         say("");
       } else {
