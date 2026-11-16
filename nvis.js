@@ -9,7 +9,7 @@
     B: "Move", I: "Insert", D: "Delete", F: "Fill", H: "Relocate",
     J: "Compare", K: "String", A: "Assemble", C: "Disasm",
   };
-  const COUNTS = { L: 1, B: 3, F: 3, H: 3, J: 3, K: 4, D: 4, I: 4 };
+  const COUNTS = { L: 2, B: 3, F: 3, H: 3, J: 3, K: 4, D: 4, I: 4 };
 
   let mode = "ready";
   let command = "";
@@ -19,6 +19,7 @@
   let entry = 0;
   let pending = false;
   let listAt = 0;
+  let listStart = 0;
   let listEnd = 0;
   let asmText = "";
 
@@ -33,13 +34,16 @@
   }
   function dumpLine(addr) {
     const here = addr & 0xffff;
-    const bytes = [0, 1, 2, 3, 4].map((offset) => hex(memory[(here + offset) & 0xffff], 2)).join(" ");
+    const bytes = [0, 1, 2, 3].map((offset) => {
+      const at = (here + offset) & 0xffff;
+      return at >= listStart && at <= listEnd ? hex(memory[at], 2) : "##";
+    }).join(" ");
     return `${hex(here, 4)} ${bytes}`;
   }
   function showList(addr) {
     const here = addr & 0xffff;
     lineEls[0].textContent = fit(dumpLine(here));
-    lineEls[1].textContent = fit(dumpLine((here + 5) & 0xffff));
+    lineEls[1].textContent = fit(dumpLine((here + 4) & 0xffff));
   }
   function showAt(addr, byteText) {
     const here = addr & 0xffff;
@@ -48,10 +52,9 @@
     lineEls[0].textContent = fit(`${hex(here, 4)}  ${byte}`);
     lineEls[1].textContent = fit(`${hex(next, 4)}  ${hex(memory[next], 2)}`);
   }
-  function showTop(text, addr) {
-    const next = ((addr ?? address) + 1) & 0xffff;
+  function showBlank(text) {
     lineEls[0].textContent = fit(text);
-    lineEls[1].textContent = fit(`${hex(next, 4)}  ${hex(memory[next], 2)}`);
+    lineEls[1].textContent = fit("");
   }
   function say(text) {
     note.textContent = text;
@@ -122,6 +125,10 @@
   function regWidth(name) {
     return name === "S" || name === "P" ? 4 : 2;
   }
+  function showHome() {
+    lineEls[0].textContent = fit("microprocessor");
+    lineEls[1].textContent = fit("8085 kit");
+  }
   function ready(message) {
     mode = "ready";
     command = "";
@@ -129,7 +136,9 @@
     fields = [];
     pending = false;
     asmText = "";
-    showAt(address);
+    address = entry;
+    cpu.PC = entry;
+    showHome();
     say(message || "");
     if (window.LabState) LabState.write(cpu, { view: address, entry });
   }
@@ -139,9 +148,10 @@
     if (command === "R" && mode === "reg") {
       const name = REG[fields.length] || "A";
       const shown = buffer || hex(regValue(name), regWidth(name));
-      return showTop(`${name}=${shown}`, cpu.PC);
+      return showBlank(`${name}=${shown}`);
     }
-    if (command === "A" && mode === "asm") return showTop(`${hex(address, 4)} ${asmText}`.trim(), address);
+    if (command === "S" && mode === "step-addr") return showBlank((buffer || "").padEnd(4, "_"));
+    if (command === "A" && mode === "asm") return showBlank(`${hex(address, 4)} ${asmText}`.trim());
     if (command === "C" && mode === "dis") {
       say(api.disassemble(memory, address).text);
       return showAt(address);
@@ -149,6 +159,7 @@
     if (mode === "list") return showList(listAt);
     if (command === "I" && mode === "insert") return showAt(address, buffer || hex(memory[address], 2));
     if (command === "F" && fields.length === 2) return showAt(fields[0], (buffer || "").padEnd(2, "_"));
+    if (mode === "args" || mode === "step-addr") return showBlank((buffer || "").padEnd(4, "_"));
     return showAt(buffer ? number(buffer, 4) : address);
   }
 
@@ -159,7 +170,10 @@
     pending = false;
     asmText = "";
     mode = "args";
-    if (name === "S") address = cpu.PC;
+    if (name === "S") {
+      mode = "step-addr";
+      address = cpu.PC;
+    }
     say("");
     paintEntry();
   }
@@ -184,12 +198,8 @@
       steps += 1;
       if (result.halted) break;
     }
-    say(`A=${hex(cpu.reg.A, 2)}`);
     address = cpu.PC;
-    showAt(cpu.PC);
-    mode = "ready";
-    command = "";
-    buffer = "";
+    return `A=${hex(cpu.reg.A, 2)}`;
   }
   function stepOne() {
     if (memory[cpu.PC] === 0xef) {
@@ -214,7 +224,16 @@
     }
     const [a, b, c, d] = values;
     if (command === "L") {
-      listAt = a & 0xffff;
+      let start = a & 0xffff;
+      let end = b & 0xffff;
+      if (end < start) {
+        const swap = start;
+        start = end;
+        end = swap;
+      }
+      listStart = start;
+      listEnd = end;
+      listAt = start;
       address = listAt;
       mode = "list";
       say("");
@@ -241,13 +260,7 @@
       for (let i = 0; i < count && i < 65536; i += 1) {
         const left = memory[(a + i) & 0xffff];
         const right = memory[(c + i) & 0xffff];
-        if (left !== right) {
-          address = (a + i) & 0xffff;
-          showAt(address);
-          say(`${hex(left, 2)} ${hex(right, 2)}`);
-          mode = "ready";
-          return;
-        }
+        if (left !== right) return ready(`${hex((a + i) & 0xffff, 4)} ${hex(left, 2)} ${hex(right, 2)}`);
       }
       ready("The two blocks are the same.");
       return;
@@ -265,12 +278,7 @@
           return;
         }
       }
-      say("Not found");
-      showAt(a & 0xffff);
-      mode = "ready";
-      command = "";
-      return;
-      return;
+      return ready("Not found");
     }
     if (command === "D") {
       const program = span(a, b);
@@ -349,17 +357,20 @@
       paintEntry();
       return;
     }
+    if (command === "S" && mode === "step-addr") {
+      if (!buffer) return paintEntry();
+      cpu.PC = takeField(4);
+      mode = "step";
+      stepOne();
+      return;
+    }
     if (command === "S") {
-      if (mode !== "step") {
-        if (buffer) cpu.PC = takeField(4);
-        mode = "step";
-      }
       stepOne();
       return;
     }
     if (command === "G") {
       if (buffer) cpu.PC = takeField(4);
-      if (name === ".") runGo();
+      if (name === ".") ready(runGo());
       else {
         address = cpu.PC;
         say("");
@@ -385,7 +396,9 @@
     }
     if (command === "C" || mode === "list") {
       if (mode === "list") {
-        listAt = (listAt + 5) & 0xffff;
+        const next = (listAt + 4) & 0xffff;
+        if (next > listEnd || next < listAt) return ready("");
+        listAt = next;
         address = listAt;
         say("");
       } else {
@@ -418,14 +431,14 @@
     if (command === "G") return pressSeparator(".");
     if (command === "E" || command === "M") {
       if (mode === "data") commitByte();
-      return ready("Memory command ended.");
+      return ready("");
     }
     if (command === "R") {
       const name = REG[fields.length] || "A";
       if (buffer) setReg(name, number(buffer, regWidth(name)));
-      return ready("Registers updated.");
+      return ready("");
     }
-    if (command === "A" || command === "C" || command === "S" || mode === "list" || mode === "found") return ready("Command ended.");
+    if (command === "A" || command === "C" || command === "S" || mode === "list" || mode === "found") return ready("");
     if (command === "I" && mode === "insert") {
       const [start, end, at, count] = fields;
       const data = fields.slice(4);
@@ -438,8 +451,11 @@
       writeSpan(start, program);
       return ready("Bytes inserted.");
     }
-    if (COUNTS[command]) return executeFields();
-    ready();
+    if (COUNTS[command]) {
+      const pendingValues = fields.length + (buffer ? 1 : 0);
+      if (pendingValues >= COUNTS[command]) return executeFields();
+    }
+    ready("");
   }
   function pressColon() {
     if (command === "E" && mode === "data") {
@@ -562,7 +578,27 @@
       entry = saved.entry & 0xffff;
       address = (saved.view ?? saved.pc) & 0xffff;
     }
-    showAt(address);
+    showHome();
     say("");
   });
+  const opcodeList = document.querySelector("#opcodes");
+  const opcodeTitle = document.createElement("h2");
+  opcodeTitle.textContent = "Opcodes";
+  opcodeList.append(opcodeTitle);
+  const sample = new Uint8Array(3);
+  for (let op = 0; op < 256; op += 1) {
+    sample[0] = op;
+    const decoded = api.disassemble(sample, 0);
+    if (!decoded.defined) continue;
+    const meaning = decoded.text
+      .replace(/,[0-9A-F]{4}H$/, ",addr")
+      .replace(/ [0-9A-F]{4}H$/, " addr")
+      .replace(/,[0-9A-F]{2}H$/, ",byte")
+      .replace(/ [0-9A-F]{2}H$/, " byte");
+    const row = document.createElement("p");
+    const code = document.createElement("b");
+    code.textContent = hex(op, 2);
+    row.append(code, ` ${meaning}`);
+    opcodeList.append(row);
+  }
 })();
