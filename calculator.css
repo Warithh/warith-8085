@@ -1,10 +1,22 @@
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  src: url("assets/fonts/AtkinsonHyperlegible-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  src: url("assets/fonts/AtkinsonHyperlegible-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+}
 :root {
   color-scheme: light;
-  --ink: #1d3340;
-  --muted: #6d7f8c;
-  --line: #d7e4e4;
-  --accent: #168a78;
-  --sans: "Segoe UI", Tahoma, sans-serif;
+  --ink: #1a1916;
+  --muted: #5c564c;
+  --line: #e3dcd0;
+  --accent: #1f4d45;
+  --sans: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
   --mono: "Cascadia Code", Consolas, monospace;
 }
 * { box-sizing: border-box; }
@@ -26,12 +38,12 @@ button, input { font: inherit; color: inherit; }
 h1 { margin: 4px 0 0; font-size: 34px; letter-spacing: -.04em; }
 .head p:last-child { margin: 6px 0 0; max-width: 52ch; color: var(--muted); font-size: 14px; }
 .back {
-  flex: 0 0 auto; border: 1px solid #d5e3e4; border-radius: 14px; padding: 8px 14px;
+  flex: 0 0 auto; border: 1px solid #d9d1c4; border-radius: 6px; padding: 8px 14px;
   color: #1d6d60; background: #f4fbf8; text-decoration: none; font-size: 13px; font-weight: 700;
 }
 .ops { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 18px; }
 .ops button {
-  min-height: 48px; border: 1px solid #e1e8ea; border-radius: 14px; background: #fff; cursor: pointer;
+  min-height: 48px; border: 1px solid #e3dcd0; border-radius: 6px; background: #fff; cursor: pointer;
   font: 700 24px/1 var(--mono);
 }
 .ops button[aria-pressed="true"] { border-color: var(--accent); color: white; background: var(--accent); }

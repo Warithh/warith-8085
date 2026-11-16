@@ -224,7 +224,7 @@ LOOP:   DCR B
       }
       thead.append(heading);
       const body = document.createElement("tbody");
-      for (const row of shown.listing) {
+      for (const row of shown.listing || []) {
         if (!row.bytes.length) continue;
         const tr = document.createElement("tr");
         tr.dataset.address = String(row.address);
@@ -506,6 +506,7 @@ LOOP:   DCR B
       setStateKey("stopped");
     }
     render();
+    persist();
   }
   function machineOrigin() {
     const originText = $("#machineOrigin").value.trim().toUpperCase();
@@ -534,7 +535,13 @@ LOOP:   DCR B
       $("#programSize").textContent = "Not assembled";
     }
   }
+  let labReady = false;
+  function persist() {
+    if (!window.LabState) return;
+    LabState.write(cpu, { view: cpu.PC, entry: program ? program.entry : cpu.PC });
+  }
   function assemble() {
+    labReady = true;
     pause();
     try {
       if (inputMode === "machine") {
@@ -549,6 +556,7 @@ LOOP:   DCR B
       const count = program.occupied.reduce((sum, byte) => sum + byte, 0);
       setStatus(() => t("assembled", count, I8085.hex(program.entry, 4)), "success");
       render();
+      persist();
     } catch (error) {
       program = null;
       render();
@@ -572,6 +580,7 @@ LOOP:   DCR B
         setStatus(() => t("executedAt", lastStep.name, I8085.hex(lastStep.pc, 4), I8085.hex(cpu.PC, 4)));
       }
       if (shouldRender) render();
+      persist();
     } catch (error) {
       pause();
       setStateKey("error", "halted");
@@ -626,6 +635,7 @@ LOOP:   DCR B
     setStateKey("ready");
     setStatus(t("resetDone"));
     render();
+    persist();
   });
   function fillSample(id) {
     const sourceText = samples[id].en;
@@ -739,7 +749,20 @@ LOOP:   DCR B
   } else window.addEventListener("resize", updateFlowWires);
   fillSample("sum");
   applyLanguage();
-  setStateKey("stopped");
-  setStatus(t("initialStatus"));
-  render();
+  window.addEventListener("pagehide", persist);
+  LabState.read().then((saved) => {
+    if (labReady) return;
+    labReady = true;
+    if (saved) {
+      LabState.apply(cpu, saved);
+      program = { memory: cpu.memory.slice(), entry: saved.entry, occupied: new Uint8Array(65536), listing: [] };
+      builtProgram.assembly = program;
+      setStateKey(cpu.halted ? "halted" : "ready");
+      setStatus(t("resetDone"));
+    } else {
+      setStateKey("stopped");
+      setStatus(t("initialStatus"));
+    }
+    render();
+  });
 })();

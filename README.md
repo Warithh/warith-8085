@@ -8,7 +8,7 @@ Open https://warithh.github.io/warith-8085/ on a phone or a computer. On Android
 
 Choose an example or write a program, then press **Assemble**. Use **Step** for one instruction, **Run** for continuous execution, and **Reset** to return to the start. The phone tabs are Code, Flow, Registers, and Memory. Each tab has **Back**: it returns to Code, and from Code it returns to the previous page.
 
-**Kit** opens the MTK-85 trainer. **Calculator** adds, subtracts, multiplies, and divides one byte and shows the same flags as the processor. Both pages have **Back** to the lab.
+**NVIS** opens the 5585A trainer on the same processor memory as the lab. **Kit** opens the MTK-85 trainer. **Calculator** adds, subtracts, multiplies, and divides one byte and shows the same flags as the processor. Each page has **Back** to the lab.
 
 ## Files
 

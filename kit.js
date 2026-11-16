@@ -14,16 +14,21 @@
 
   const digits = [];
   const mount = document.querySelector("#digits");
-  for (let index = 0; index < 8; index += 1) {
-    const digit = document.createElement("div");
-    digit.className = index === 4 ? "digit gap" : "digit";
-    ["a h", "b v", "c v", "d h", "e v", "f v", "g h", "dp"].forEach((name) => {
-      const segment = document.createElement("i");
-      segment.className = `s ${name}`;
-      digit.append(segment);
-    });
-    mount.append(digit);
-    digits.push(digit);
+  for (let row = 0; row < 2; row += 1) {
+    const line = document.createElement("div");
+    line.className = "digit-row";
+    for (let column = 0; column < 6; column += 1) {
+      const digit = document.createElement("div");
+      digit.className = column === 4 ? "digit gap" : "digit";
+      ["a h", "b v", "c v", "d h", "e v", "f v", "g h", "dp"].forEach((name) => {
+        const segment = document.createElement("i");
+        segment.className = `s ${name}`;
+        digit.append(segment);
+      });
+      line.append(digit);
+      digits.push(digit);
+    }
+    mount.append(line);
   }
   const fnButtons = {};
   function addKey(parent, label, altLabel, onPress) {
@@ -167,7 +172,7 @@
   let booting = true;
   const bootTimer = setInterval(() => {
     if (!booting) return;
-    const frame = boot.slice(bootIndex, bootIndex + 6).concat([0, 0]);
+    const frame = boot.slice(bootIndex, bootIndex + 6).concat([0, 0, 0, 0, 0, 0]);
     frame.forEach((bits, index) => {
       const parts = digits[index].children;
       for (let bit = 0; bit < 8; bit += 1) parts[bit].classList.toggle("on", Boolean(bits & (1 << bit)));

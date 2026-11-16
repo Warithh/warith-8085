@@ -1,0 +1,73 @@
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  src: url("assets/fonts/AtkinsonHyperlegible-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  src: url("assets/fonts/AtkinsonHyperlegible-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-display: swap;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; min-height: 100vh; color: #1a1916; background: #f4f1ea;
+  font: 16px/1.45 "Atkinson Hyperlegible", "Segoe UI", sans-serif;
+}
+.top { display: flex; align-items: center; gap: 16px; padding: 16px 22px 0; }
+.top strong, .top span { display: block; }
+.top span { color: #5c564c; font-size: 13px; }
+.back {
+  min-height: 36px; display: inline-flex; align-items: center; border: 1px solid #d9d1c4; border-radius: 6px;
+  padding: 6px 14px; color: #1f4d45; background: #fff; text-decoration: none; font-weight: 700;
+}
+.board { padding: 18px 22px 32px; }
+.module {
+  position: relative; width: min(980px, 100%); margin: 0 auto; padding: 28px 28px 24px;
+  background: linear-gradient(180deg, #3a3a3a, #161616);
+  border-radius: 8px; box-shadow: inset 0 1px 0 #8a8a8a, 0 16px 28px #1a191628;
+}
+.screw {
+  position: absolute; width: 14px; height: 14px; border-radius: 50%;
+  background:
+    linear-gradient(115deg, transparent 46%, #1a1a1a 46% 54%, transparent 54%),
+    radial-gradient(circle at 35% 30%, #e4e4e4, #8a8a8a 42%, #3a3a3a 74%, #151515);
+  box-shadow: 0 0 0 2px #2a2a2a;
+}
+.screw:nth-child(1) { top: 8px; left: 8px; }
+.screw:nth-child(2) { top: 8px; right: 8px; }
+.screw:nth-child(3) { bottom: 8px; left: 8px; }
+.screw:nth-child(4) { bottom: 8px; right: 8px; }
+.lcd {
+  padding: 32px 36px 36px; background: linear-gradient(180deg, #d5e4b4, #a9c07e 48%, #8ea86a);
+  box-shadow: inset 0 0 0 4px #66784c, inset 0 12px 18px #ffffff70;
+}
+.lcd-line {
+  margin: 0; color: #1c2614; font: 48px/1.35 Consolas, "Cascadia Mono", monospace;
+  letter-spacing: .12em; white-space: pre;
+}
+.lcd-line + .lcd-line { margin-top: 8px; }
+.name { margin: 14px 0 10px; color: #f4f1ea; text-align: center; letter-spacing: .14em; font-size: 14px; }
+.commands, .marks, .hex { display: grid; gap: 8px; }
+.commands { grid-template-columns: repeat(5, minmax(0, 1fr)); margin-bottom: 8px; }
+.marks { grid-template-columns: repeat(6, minmax(0, 1fr)); margin-bottom: 8px; }
+.hex { grid-template-columns: repeat(4, minmax(0, 1fr)); width: min(520px, 100%); margin: 0 auto; }
+.key {
+  min-height: 52px; border: 0; border-radius: 6px; color: #f6f3ee; cursor: pointer;
+  background: linear-gradient(180deg, #3c3a36, #242220);
+  box-shadow: inset 0 1px 0 #6e6a64, 0 4px 0 #121110;
+  font: 700 16px/1.1 "Atkinson Hyperlegible", "Segoe UI", sans-serif;
+}
+.key small { display: block; margin-bottom: 3px; color: #e7c56a; font-size: 10px; letter-spacing: .04em; }
+.key.command { background: linear-gradient(180deg, #24584f, #1a3d37); }
+.key:active { transform: translateY(3px); box-shadow: inset 0 2px 3px #000a; }
+.note { width: min(980px, 100%); min-height: 1.4em; margin: 14px auto 0; color: #4a4338; }
+@media (max-width: 720px) {
+  .lcd { padding: 18px 14px 20px; }
+  .lcd-line { font-size: 22px; letter-spacing: .06em; }
+  .commands { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .marks, .hex { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hex { width: 100%; }
+  .key { min-height: 48px; }
+}

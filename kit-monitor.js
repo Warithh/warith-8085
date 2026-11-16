@@ -34,20 +34,26 @@
         .map((char) => SEG[parseInt(char, 16)]);
     }
 
-    digits() {
-      let patterns;
-      let dots = 0;
-      if (this.view.kind === "mem") {
-        patterns = this.hexPatterns(this.address, 4).concat(this.hexPatterns(this.memory[this.address], 2), [0, 0]);
-        dots = this.mode === "addr" ? 0x0f : 0x30;
-      } else if (this.view.kind === "pair") {
-        patterns = this.hexPatterns(this.view.value, 4).concat([0, 0, 0, 0]);
-        dots = 0x08;
-      } else {
-        patterns = [0, 0, 0, 0].concat(this.hexPatterns(this.view.value, 2), [0, 0]);
-        dots = 0x30;
-      }
+    memoryLine(address, marked) {
+      const patterns = this.hexPatterns(address, 4).concat(this.hexPatterns(this.memory[address & 0xffff], 2));
+      const dots = marked ? (this.mode === "addr" ? 0x0f : 0x30) : 0;
       return patterns.map((bits, index) => (dots & (1 << index) ? bits | 0x80 : bits));
+    }
+
+    digits() {
+      const next = (this.address + 1) & 0xffff;
+      if (this.view.kind === "pair") {
+        const top = this.hexPatterns(this.view.value, 4).concat([0, 0]);
+        top[3] |= 0x80;
+        return top.concat(this.memoryLine(this.address, false));
+      }
+      if (this.view.kind !== "mem") {
+        const top = [0, 0, 0, 0].concat(this.hexPatterns(this.view.value, 2));
+        top[4] |= 0x80;
+        top[5] |= 0x80;
+        return top.concat(this.memoryLine(this.address, false));
+      }
+      return this.memoryLine(this.address, true).concat(this.memoryLine(next, false));
     }
 
     showMemory() {

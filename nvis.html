@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; frame-src 'none'">
+  <title>NVIS 5585A</title>
+  <link rel="stylesheet" href="nvis.css?v=4">
+</head>
+<body>
+  <header class="top">
+    <a class="back" href="index.html">Back</a>
+    <div>
+      <strong>NVIS 5585A</strong>
+      <span>Advanced 8085 trainer</span>
+    </div>
+  </header>
+  <main class="board">
+    <section class="module" aria-label="NVIS 5585A display and keys">
+      <i class="screw"></i><i class="screw"></i><i class="screw"></i><i class="screw"></i>
+      <div class="lcd" aria-label="20 by 2 character display">
+        <div class="lcd-line"></div>
+        <div class="lcd-line"></div>
+      </div>
+      <p class="name">NVIS 5585A</p>
+      <div class="commands" id="commands"></div>
+      <div class="marks" id="marks"></div>
+      <div class="hex" id="hex"></div>
+    </section>
+    <p id="note" class="note"></p>
+  </main>
+  <script src="core.js"></script>
+  <script src="lab-state.js"></script>
+  <script src="nvis.js?v=5"></script>
+</body>
+</html>
